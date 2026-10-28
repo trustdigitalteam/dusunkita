@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+"""Dusun Kita — otomasi update harian.
+
+Alur (sama dengan ambil-komen.html, tapi otomatis):
+  1. Scrape komentar postingan terbaru @dusunkita via Graph API Instagram
+  2. Parse komentar "nama + warna bata + warna tembok" -> warga baru
+  3. Update state.json (residents bertambah, followers, day++)
+  4. Generate data.js
+  5. git commit + push (GitHub Pages auto-deploy)
+
+Env (jangan commit):
+  IG_TOKEN  = long-lived access token Instagram Graph API
+  (opsional) GH_BRANCH = branch push (default: main)
+
+Pemakaian:
+  python3 scripts/otomasi.py            # scrape + update + push
+  python3 scripts/otomasi.py --dry-run  # scrape + parse saja, tanpa tulis/push
+  python3 scripts/otomasi.py --no-push  # update data.js tanpa push
+"""
+import json, os, re, sys, subprocess, time
+from datetime import datetime, timezone, timedelta
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
+
+WIB = timezone(timedelta(hours=7))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATE = os.path.join(ROOT, "scripts", "state.json")
+OUT = os.path.join(ROOT, "data.js")
+G = "https://graph.instagram.com/"
+
+# warna yang dikenali -> kode warna peta (wall/roof)
+WARNA = {
+    "merah": "merah", "merah muda": "merah muda", "pink": "merah muda",
+    "biru": "biru", "biru muda": "biru", "toska": "biru", "tosca": "biru",
+    "hijau": "hijau", "hijau muda": "hijau",
+    "kuning": "kuning", "orange": "kuning", "oranye": "kuning",
+    "ungu": "ungu", "ungu muda": "ungu", "violet": "ungu",
+    "putih": "putih", "hitam": "hitam", "abu": "abu", "abu-abu": "abu",
+    "coklat": "coklat", "cokelat": "coklat", "krem": "krem",
+}
+DEFAULT_WALL = "putih"
+DEFAULT_ROOF = "merah"
+
+
+def log(msg):
+    print(f"[{datetime.now(WIB).strftime('%H:%M:%S')}] {msg}")
+
+
+def get_json(url):
+    req = Request(url, headers={"User-Agent": "dusunkita-bot/1.0"})
+    with urlopen(req, timeout=30) as r:
+        return json.loads(r.read().decode())
+
+
+def api(path, params, token):
+    q = dict(params)
+    q["access_token"] = token
+    return get_json(G + path + "?" + urlencode(q))
+
+
+def load_state():
+    if os.path.exists(STATE):
+        with open(STATE) as f:
+            return json.load(f)
+    return None
+
+
+def save_state(s):
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    with open(STATE, "w") as f:
+        json.dump(s, f, ensure_ascii=False, indent=2)
+
+
+def fetch_comments(token, limit=5, max_pages=10):
+    """Ambil komentar dari N postingan terbaru (top-level + balasan)."""
+    media = api("me/media", {"fields": "id,caption,timestamp,comments_count", "limit": limit}, token)
+    rows = []
+    for m in media.get("data", []):
+        mid = m["id"]
+        url = G + f"{mid}/comments?fields=id,text,timestamp,like_count,username,from,replies{{id,text,timestamp,like_count,username,from}}&limit=50&access_token={urlencode({'access_token': token})['access_token']}"
+        # graph api pakai akses token via query
+        url = G + f"{mid}/comments?fields=id,text,timestamp,like_count,username,from,replies{{id,text,timestamp,like_count,username,from}}&limit=50&access_token={token}"
+        pages = 0
+        while url and pages < max_pages:
+            j = get_json(url)
+            for c in j.get("data", []):
+                u = (c.get("from") or {}).get("username") or c.get("username", "")
+                rows.append({"t": c.get("timestamp"), "u": u, "x": c.get("text", ""), "l": c.get("like_count", 0), "rep": False})
+                rp = c.get("replies")
+                while rp:
+                    for r in rp.get("data", []):
+                        ru = (r.get("from") or {}).get("username") or r.get("username", "")
+                        rows.append({"t": r.get("timestamp"), "u": ru, "x": r.get("text", ""), "l": r.get("like_count", 0), "rep": True})
+                    rp = rp.get("paging", {}).get("next") and get_json(rp["paging"]["next"])
+            url = j.get("paging", {}).get("next")
+            pages += 1
+    rows.sort(key=lambda r: r.get("t") or "")
+    return rows
+
+
+def parse_warna(teks):
+    """Deteksi warna bata (atap) dan tembok dari teks komentar."""
+    t = teks.lower()
+    roof, wall = None, None
+    # pola "atap X tembok Y" / "bata X tembok Y" / "genteng X tembok Y"
+    m = re.search(r"(?:atap|bata|genteng|roof)\s*(?:nya|warna)?\s*:?\s*([a-z]+(?:\s[a-z]+)?)", t)
+    if m and m.group(1) in WARNA:
+        roof = WARNA[m.group(1)]
+    m2 = re.search(r"(?:tembok|wall|dinding|warna)\s*(?:nya|warna)?\s*:?\s*([a-z]+(?:\s[a-z]+)?)", t)
+    if m2 and m2.group(1) in WARNA:
+        wall = WARNA[m2.group(1)]
+    return roof or DEFAULT_ROOF, wall or DEFAULT_WALL
+
+
+def parse_warga(rows):
+    """Dari komentar, hasilkan daftar warga baru (nama + warna)."""
+    warga = []
+    seen = set()
+    for r in rows:
+        if r["rep"]:
+            continue  # cuma komentar utama
+        u = (r.get("u") or "").strip()
+        if not u:
+            continue
+        teks = (r.get("x") or "").strip()
+        if len(teks) < 2:
+            continue
+        # skip komentar balasan petunjuk / admin
+        if u.lower() in ("dusunkita",):
+            continue
+        roof, wall = parse_warna(teks)
+        # nama = kata-kata sebelum warna, atau username
+        nama = teks.split(",")[0].strip() if "," in teks else teks
+        nama = re.sub(r"(?:atap|bata|genteng|tembok|wall|roof|warna)[^,]*", "", nama, flags=re.I).strip()
+        nama = nama or u
+        nama = re.sub(r"\s+", " ", nama).strip()[:40]
+        if u.lower() in seen:
+            continue
+        seen.add(u.lower())
+        warga.append({"name": u, "nick": nama, "roof": roof, "wall": wall, "day": None})
+    return warga
+
+
+def next_slot(state):
+    """Cari pekarangan kosong (x,y) di grid kampung."""
+    used = {(r["x"], r["y"]) for r in state.get("residents", [])}
+    # grid 50 pekarangan: 10 kolom x 5 baris, mulai offset 44,44 seperti referensi
+    for i in range(50):
+        x = 44 + (i % 10)
+        y = 44 + (i // 10)
+        if (x, y) not in used:
+            return x, y
+    return 44 + (len(used) % 10), 44 + (len(used) // 10)
+
+
+def main():
+    dry = "--dry-run" in sys.argv
+    no_push = "--no-push" in sys.argv
+    token = os.environ.get("IG_TOKEN", "").strip()
+    if not token:
+        log("ERROR: IG_TOKEN belum di-set. Export dulu: export IG_TOKEN=IGAA...")
+        sys.exit(1)
+
+    state = load_state()
+    if not state:
+        log("ERROR: scripts/state.json belum ada. Jalankan generate_data.py --reset dulu.")
+        sys.exit(1)
+
+    log("Mengambil komentar...")
+    rows = fetch_comments(token)
+    log(f"  {len(rows)} komentar/balasan diambil")
+
+    warga = parse_warga(rows)
+    log(f"  {len(warga)} warga baru terdeteksi")
+
+    if dry:
+        for w in warga[:20]:
+            log(f"  DRY: @{w['name']} nick='{w['nick']}' bata={w['roof']} tembok={w['wall']}")
+        log("DRY-RUN selesai (tidak ada perubahan)")
+        return
+
+    existing = {r["name"].lower() for r in state.get("residents", [])}
+    added = 0
+    day = state.get("day", 1)
+    for w in warga:
+        if w["name"].lower() in existing:
+            continue
+        x, y = next_slot(state)
+        state["residents"].append({
+            "name": w["name"], "x": x, "y": y, "day": day,
+            "nick": w["nick"], "roof": w["roof"], "wall": w["wall"],
+        })
+        existing.add(w["name"].lower())
+        added += 1
+
+    state["day"] += 1
+    state["updated"] = datetime.now(WIB).strftime("%Y-%m-%d")
+    state["followers"] = state.get("followers", 1)  # diupdate manual / via api/followers.js
+    save_state(state)
+    log(f"  +{added} warga ditambahkan (hari -> {state['day']})")
+
+    # generate data.js
+    js = "window.NK_DATA = " + json.dumps(state, ensure_ascii=False, indent=1) + ";"
+    with open(OUT, "w") as f:
+        f.write(js)
+    log(f"  data.js ditulis ({os.path.getsize(OUT)} bytes)")
+
+    if no_push:
+        log("--no-push: selesai tanpa push.")
+        return
+
+    # git commit + push
+    branch = os.environ.get("GH_BRANCH", "main")
+    subprocess.run(["git", "-C", ROOT, "add", "data.js", "scripts/state.json"], check=True)
+    r = subprocess.run(["git", "-C", ROOT, "commit", "-m", f"Hari ke-{state['day']}: +{added} warga baru"], capture_output=True, text=True)
+    if r.returncode == 0:
+        subprocess.run(["git", "-C", ROOT, "push", "origin", branch], check=True)
+        log(f"  pushed ke {branch}")
+    else:
+        log("  (tidak ada perubahan untuk di-commit)")
+    log("Selesai.")
+
+
+if __name__ == "__main__":
+    main()
