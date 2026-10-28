@@ -1970,12 +1970,12 @@ if(AWARDS.length&&false){/* Papan Penghargaan disembunyikan (sudah lebih dari se
 
 /* kalender kejutan: petunjuk misterius tiap hari, terbuka jam 19.00 saat fiturnya dirilis (buka:true diisi saat deploy rilis) */
 const KEJUTAN=[
-  {d:'2026-10-26',ic:'🏞️',q:'Kampung lama akhirnya punya nama…',n:'Gerbang Dusun Awal Kita',buka:true},
-  {d:'2026-10-27',ic:'🚚',q:'Sesuatu yang besar bakal lewat jalan desa…',n:'Jasa Pindahan',buka:!(window.NK_DATA&&window.NK_DATA.pindahan===false)},
-  {d:'2026-10-28',ic:'🔍',q:'Pak RT menyembunyikan sesuatu di peta…',n:'Harta Karun Harian'},
-  {d:'2026-10-29',ic:'📺',q:'Ada yang mau siaran…',n:'TV Komen Nasional'},
-  {d:'2026-10-30',ic:'🎈',q:'Lihat ke langit malam nanti…',n:'Balon Bata'},
-  {d:'2026-10-31',ic:'🧺',q:'Kampung bakal makin rame…',n:'Pasar Senggol'}];
+  {d:'2026-10-29',ic:'🏘️',q:'Hari pertama Dusun Kita dibuka…',n:'Pendaftaran Warga',buka:false},
+  {d:'2026-10-30',ic:'🔍',q:'Pak RT sembunyikan sesuatu di peta…',n:'Harta Karun Harian'},
+  {d:'2026-10-31',ic:'🏆',q:'Voting warga terbaik pekan pertama…',n:'Tetangga Idaman'},
+  {d:'2026-11-01',ic:'📺',q:'Ada yang mau siaran dari dusun…',n:'TV Komen Nasional'},
+  {d:'2026-11-02',ic:'🎈',q:'Lihat ke langit malam nanti…',n:'Balon Bata'},
+  {d:'2026-11-03',ic:'🧺',q:'Kampung bakal makin rame…',n:'Pasar Dusun'}];
 function renderKejutan(){const box=$('kjtList');if(!box)return;box.innerHTML='';
   const H=['Min','Sen','Sel','Rab','Kam','Jum','Sab'],now=new Date(Date.now()+252e5),hari=now.toISOString().slice(0,10),menit=now.getUTCHours()*60+now.getUTCMinutes();
   KEJUTAN.forEach(k=>{const dt=new Date(k.d+'T00:00:00Z'),li=document.createElement('li'),kd=el('span','kd'),ki=el('span','ki'),kt=el('span','kt');
