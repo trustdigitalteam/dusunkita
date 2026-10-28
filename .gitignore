@@ -1,0 +1,11 @@
+# backup
+*.bak
+# env & rahasia
+.env
+.env.*
+scripts/state.json
+# node
+node_modules/
+.vercel/
+# os
+.DS_Store

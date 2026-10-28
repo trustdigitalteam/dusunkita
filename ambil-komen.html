@@ -1,5 +1,5 @@
 <!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>Ambil Komen · Negeri Komen</title>
+<meta name="robots" content="noindex"><title>Ambil Komen · Dusun Kita</title>
 <style>
 :root{--ink:#1C2520;--muted:#5E6B63;--line:#DCE3D8;--bg:#F5F7F1;--gent:#C4502F;--kuning:#F2C230;--daun:#2F7D5B}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -14,7 +14,7 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}button.
 th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{position:sticky;top:0;background:#EEF2EA}td.u{font-weight:700;white-space:nowrap}
 tr.rep td{background:#FAFBF8;color:var(--muted)}.err{color:#B3261E;font-weight:600}.ok{color:var(--daun);font-weight:600}
 </style></head><body><main>
-<h1>Ambil Komen</h1><p class="l">Alat pribadi kepala desa @negerikomen. Token hanya disimpan di browser ini dan hanya dikirim ke graph.instagram.com.</p>
+<h1>Ambil Komen</h1><p class="l">Alat pribadi Pak RT @dusunkita. Token hanya disimpan di browser ini dan hanya dikirim ke graph.instagram.com.</p>
 <div class="card"><div class="row">
  <div><label for="tok">Token Instagram</label><input id="tok" type="password" placeholder="IGAA…" autocomplete="off"></div>
  <div style="flex:0"><button id="load">Muat postingan</button></div></div>
@@ -65,7 +65,7 @@ $('noRep').onchange=()=>ROWS.length&&render();$('cut').onchange=()=>ROWS.length&
 const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
 $('csv').onclick=()=>{const v=view(),lines=['waktu_wib,username,komentar,like,balasan,balasan_untuk,id'].concat(v.map(r=>[wib(r.t),r.u,q(r.x.replace(/\n/g,' ')),r.l,r.rep?1:0,r.p,q(r.id)].join(',')));
   const b=new Blob(['﻿'+lines.join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);
-  a.download='komen-negerikomen-'+new Date().toISOString().slice(0,10)+'.csv';a.click()};
+  a.download='komen-dusunkita-'+new Date().toISOString().slice(0,10)+'.csv';a.click()};
 $('copy').onclick=async()=>{const t=view().map(r=>(r.rep?'↳ ':'')+'@'+r.u+' | '+r.x.replace(/\n/g,' ')+' | '+r.l).join('\n');
   try{await navigator.clipboard.writeText(t);msg('Teks disalin ('+view().length+' baris).','ok')}catch(e){msg('Gagal menyalin, pakai Unduh CSV saja.','err')}};
 </script></body></html>

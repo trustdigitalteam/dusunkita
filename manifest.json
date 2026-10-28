@@ -1,7 +1,7 @@
 {
- "name": "Negeri Komen",
- "short_name": "Negeri Komen",
- "description": "Kampung dari komentar. Komen di @negerikomen, dapat satu rumah.",
+ "name": "Dusun Kita",
+ "short_name": "Dusun Kita",
+ "description": "Dusun kecil dibangun tetangganya. Komen di @dusunkita, dapat satu pekarangan.",
  "start_url": "/?app=1",
  "scope": "/",
  "display": "standalone",

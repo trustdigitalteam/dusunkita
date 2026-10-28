@@ -1,4 +1,4 @@
-/* Negeri Komen: service worker sederhana. Selalu ambil versi terbaru dari internet; cache hanya cadangan saat offline. API tidak pernah dicache. */
+/* Dusun Kita: service worker sederhana. Selalu ambil versi terbaru dari internet; cache hanya cadangan saat offline. API tidak pernah dicache. */
 const C='nk-v1';
 self.addEventListener('install',e=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));

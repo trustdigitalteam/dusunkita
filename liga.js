@@ -136,7 +136,7 @@ async function kartuBagikan(){try{await document.fonts.ready}catch(e){}
   c.fillStyle='#24402E';c.fillRect(0,0,1080,1920);for(let i=0;i<16;i++){c.fillStyle=i%2?'#2A4A35':'#24402E';c.fillRect(0,i*120,1080,120)}
   c.strokeStyle='#ffffff18';c.lineWidth=6;c.beginPath();c.arc(540,960,230,0,7);c.stroke();c.beginPath();c.moveTo(0,960);c.lineTo(1080,960);c.stroke();
   c.textAlign='center';c.textBaseline='middle';
-  R(380,70,320,64,32,KUNING);c.fillStyle=INK;c.font=`800 30px ${F}`;c.fillText('NEGERI KOMEN',540,103);
+  R(380,70,320,64,32,KUNING);c.fillStyle=INK;c.font=`800 30px ${F}`;c.fillText('DUSUN KITA',540,103);
   c.fillStyle='#fff';c.font=`800 110px ${F}`;c.fillText('⚽ LIGA DUSUN',540,215);
   c.fillStyle='#ffffffcc';c.font=`600 38px ${F}`;c.fillText((hk?'Hari ke-'+hk+' · ':'')+'per jam '+jam+' WIB',540,300);
   // klasemen
@@ -158,13 +158,13 @@ async function kartuBagikan(){try{await document.fonts.ready}catch(e){}
   if(st.main&&!st.rp){const g=laga(st.d,st.s);info='🔴 LIVE: '+TIM[g.A].nama+' vs '+TIM[g.B].nama}else if(st.s>=0){const g=laga(hariKe(t),st.s);info='Berikutnya '+String(JAM[st.s]).padStart(2,'0')+'.00: '+TIM[g.A].nama+' vs '+TIM[g.B].nama}else info='Laga lagi besok mulai 13.00 WIB';
   c.textAlign='center';c.fillStyle='#fff';let fi=36;c.font=`700 ${fi}px ${F}`;while(c.measureText(info).width>940&&fi>22){fi-=2;c.font=`700 ${fi}px ${F}`}c.fillText(info,540,yb+20);
   // ajakan
-  R(90,1650,900,220,36,KUNING,6);c.fillStyle=INK;c.font=`600 34px ${F}`;c.fillText('Nonton live tiap hari 13.00–20.00 WIB',540,1704);c.font=`800 64px ${F}`;c.fillText('@negerikomen',540,1774);c.font=`600 30px ${F}`;c.fillStyle='#5B6860';c.fillText('negerikomen.my.id',540,1836);
+  R(90,1650,900,220,36,KUNING,6);c.fillStyle=INK;c.font=`600 34px ${F}`;c.fillText('Nonton live tiap hari 13.00–20.00 WIB',540,1704);c.font=`800 64px ${F}`;c.fillText('@dusunkita',540,1774);c.font=`600 30px ${F}`;c.fillStyle='#5B6860';c.fillText('dusunkita.my.id',540,1836);
   return await new Promise(r=>k.toBlob(r,'image/png'))}
 let pvU=null;async function bukaBagikan(){const bt=root.querySelector('.lg-sh');bt.disabled=true;bt.textContent='Menyiapkan gambar…';
-  try{const b=await kartuBagikan(),f=new File([b],'liga-dusun-negerikomen.png',{type:'image/png'});if(pvU)URL.revokeObjectURL(pvU);pvU=URL.createObjectURL(b);
+  try{const b=await kartuBagikan(),f=new File([b],'liga-dusun-dusunkita.png',{type:'image/png'});if(pvU)URL.revokeObjectURL(pvU);pvU=URL.createObjectURL(b);
     const o=document.createElement('div');o.className='lg-pv';o.innerHTML=`<div class="lg-pvb"><img alt="Klasemen Liga Dusun"><div class="lg-row"><button class="lg-go">📤 Bagikan</button><a class="lg-dl" download="${f.name}">⬇️ Simpan gambar</a></div><button class="lg-pvx">Tutup</button></div>`;
     o.querySelector('img').src=pvU;o.querySelector('.lg-dl').href=pvU;const can=!!(navigator.canShare&&navigator.canShare({files:[f]}));const go=o.querySelector('.lg-go');go.hidden=!can;
-    go.onclick=async()=>{try{await navigator.share({files:[f],title:'Liga Dusun · Negeri Komen',text:'Klasemen & top skor Liga Dusun di Negeri Komen ⚽ Nonton live di negerikomen.my.id'})}catch(e){}};
+    go.onclick=async()=>{try{await navigator.share({files:[f],title:'Liga Dusun · Dusun Kita',text:'Klasemen & top skor Liga Dusun di Dusun Kita ⚽ Nonton live di dusunkita.my.id'})}catch(e){}};
     o.querySelector('.lg-pvx').onclick=()=>o.remove();o.addEventListener('pointerdown',e=>{if(e.target===o)o.remove()});root.append(o)}catch(e){}
   bt.disabled=false;bt.textContent='📸 Bagikan klasemen & top skor'}
 function open(opt={}){if(root)return;OPT=opt;TIM=opt.tim||[];vt=Date.now();speed=1;hari0=opt.mulai?hariKe(Date.parse(opt.mulai)):hariKe(vt);
