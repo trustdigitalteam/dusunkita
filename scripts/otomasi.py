@@ -27,6 +27,51 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "scripts", "state.json")
 OUT = os.path.join(ROOT, "data.js")
 
+# Upstash Redis untuk sync state ke dashboard admin (Vercel)
+KV_URL = os.environ.get("KV_REST_API_URL", "").rstrip("/")
+KV_TOKEN = os.environ.get("KV_REST_API_TOKEN", "")
+
+def redis_cmd(cmd):
+    """Eksekusi satu Redis command via Upstash REST API."""
+    if not KV_URL or not KV_TOKEN:
+        return None
+    try:
+        req = Request(KV_URL, data=json.dumps(cmd).encode(),
+                      headers={"Authorization": f"Bearer {KV_TOKEN}", "Content-Type": "application/json"})
+        with urlopen(req, timeout=10) as r:
+            return json.loads(r.read()).get("result")
+    except Exception:
+        return None
+
+def sync_redis(state):
+    """Push state + antrian ke Redis supaya dashboard admin Vercel bisa baca."""
+    if not KV_URL or not KV_TOKEN:
+        return
+    try:
+        # state lengkap
+        redis_cmd(["SET", "dusun:state", json.dumps(state, ensure_ascii=False)])
+        # summary untuk dashboard
+        summary = {
+            "day": state.get("day", 1),
+            "warga": len(state.get("residents", [])),
+            "buildings": len(state.get("buildings", [])),
+            "followers": state.get("followers", 0),
+            "target": state.get("target", 1000),
+            "updated": state.get("updated", datetime.now(WIB).strftime("%Y-%m-%d")),
+        }
+        redis_cmd(["SET", "dusun:summary", json.dumps(summary, ensure_ascii=False)])
+        # antrian
+        antrian = load_antrian()
+        redis_cmd(["SET", "dusun:antrian", json.dumps(antrian, ensure_ascii=False)])
+        # warga list (singkat)
+        warga_list = [{"name": r.get("name"), "nick": r.get("nick", ""), "day": r.get("day", 1),
+                       "roof": r.get("roof", ""), "wall": r.get("wall", "")}
+                      for r in state.get("residents", [])]
+        redis_cmd(["SET", "dusun:warga", json.dumps(warga_list, ensure_ascii=False)])
+        log("  sync ke Redis OK")
+    except Exception as e:
+        log(f"  sync Redis gagal: {e}")
+
 # Grid peta = identik dengan index.html (const T=40,N=91,C=45,S=6).
 C = 45
 S = 6
@@ -314,6 +359,8 @@ def main():
             baru += 1
         save_antrian(antrian)
         log(f"  +{baru} antrian baru (total antrian: {len(antrian)})")
+        # sync antrian ke Redis
+        sync_redis(state)
         log("Selesai (antrian.json). Review di dashboard, lalu jalankan --apply.")
         return
 
@@ -354,6 +401,9 @@ def main():
         with open(OUT, "w") as f:
             f.write(js)
         log(f"  data.js ditulis ({os.path.getsize(OUT)} bytes)")
+
+        # sync ke Redis supaya dashboard admin Vercel bisa baca
+        sync_redis(state)
 
         if not no_push:
             branch = os.environ.get("GH_BRANCH", "main")
@@ -409,6 +459,9 @@ def main():
     with open(OUT, "w") as f:
         f.write(js)
     log(f"  data.js ditulis ({os.path.getsize(OUT)} bytes)")
+
+    # sync ke Redis supaya dashboard admin Vercel bisa baca
+    sync_redis(state)
 
     if no_push:
         log("--no-push: selesai tanpa push.")

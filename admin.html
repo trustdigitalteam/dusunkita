@@ -53,11 +53,9 @@ a{color:var(--gent)}
   <div class="card">
     <h2>📥 Antrian Komentar</h2>
     <div class="row">
-      <button id="btnScrape" class="gent">🔍 Scrape Komen IG</button>
-      <button id="btnApply" class="ok">✅ Apply yang Disetujui</button>
       <button id="btnRefresh" class="sec">🔄 Refresh</button>
     </div>
-    <div class="msg" id="antriMsg"></div>
+    <div class="msg" id="antriMsg">Scrape & apply berjalan otomatis via cron Hermes (19:30 & 19:40 WIB). Dashboard ini read-only — approve/tolak antrian di sini, apply otomatis di VPS.</div>
     <table>
       <thead><tr><th>Status</th><th>@username</th><th>Nama</th><th>Bata</th><th>Tembok</th><th>Aksi</th></tr></thead>
       <tbody id="antriTb"></tbody>
@@ -77,8 +75,8 @@ a{color:var(--gent)}
     <h2>🔗 Koneksi</h2>
     <p style="margin:0;font-size:14px">
       Web live: <a id="linkWeb" href="#" target="_blank">–</a><br>
-      Sumber data: <code>scripts/state.json</code> → <code>data.js</code> (dipush)<br>
-      Alur: video 19:00 → komen → scrape 19:30 → approve → apply → web live
+      Sumber data: VPS (otomasi.py) → Redis → dashboard<br>
+      Alur: video 19:00 → komen → cron scrape 19:30 → approve di dashboard → cron apply 19:40 → web live
     </p>
   </div>
 </main>
@@ -86,7 +84,7 @@ a{color:var(--gent)}
 const $=id=>document.getElementById(id);
 const ADMIN_KEY='dusunkita-45b03625615b0371';
 const API='/api/admin?key='+ADMIN_KEY;
-const WARN={'merah':'#C4502F','merah muda':'#E58AA5','pink':'#E58AA5','biru':'#3B6FB5','biru muda':'#7FA8D9','toska':'#3FA79A','hijau':'#4C9A5A','hijau muda':'#8BC79B','kuning':'#E2B23A','orange':'#E88A2A','ungu':'#7A5BA6','ungu muda':'#A98BC7','putih':'#EDEDED','hitam':'#333','abu':'#999','coklat':'#8A5A3A','krem':'#EAD9B0'};
+const WARN={'merah':'#8B3A2E','merah muda':'#C67A7A','pink':'#C67A7A','biru':'#2F6BA5','biru muda':'#6FA8D0','tosca':'#2A938A','hijau':'#2E8C5A','hijau muda':'#7CC46A','kuning':'#D4A02A','oranye':'#D4762A','orange':'#D4762A','ungu':'#7A4A98','ungu muda':'#A98BC7','putih':'#E0DDD4','hitam':'#2A2A2A','abu':'#7A7F84','abu-abu':'#7A7F84','coklat':'#7A4A2C','krem':'#D8C69E','emas':'#C49A2C','navy':'#1E3A5E','marun':'#5E1A23','terakota':'#A8543A'};
 function sw(c){const k=(c||'putih').toLowerCase();return '<span class="swatch" style="background:'+(WARN[k]||'#ccc')+'"></span>'+(c||'?')}
 async function jfetch(url,opt){const r=await fetch(url,opt);const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t}}}
 async function refresh(){
@@ -133,12 +131,6 @@ function renderWarga(list){
   if(!list.length)tb.innerHTML='<tr><td colspan="6" class="empty">Belum ada warga.</td></tr>';
 }
 $('#btnRefresh').onclick=refresh;
-$('#btnScrape').onclick=async()=>{const m=$('#antriMsg');m.className='msg';m.textContent='Scraping… (butuh IG_TOKEN di server)';
-  const d=await jfetch(API+'?m=scrape');if(d.ok){m.className='msg ok';m.textContent=d.msg}else{m.className='msg err';m.textContent=d.error||'gagal'}
-  refresh()};
-$('#btnApply').onclick=async()=>{const m=$('#antriMsg');m.className='msg';m.textContent='Applying…';
-  const d=await jfetch(API+'?m=apply');if(d.ok){m.className='msg ok';m.textContent=d.msg}else{m.className='msg err';m.textContent=d.error||'gagal'}
-  refresh()};
 refresh();
 setInterval(refresh,30000);
 </script>
