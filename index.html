@@ -715,13 +715,14 @@ function freePlots(residents,buildings,n){
 }
 
 // warna atap dari komentar ("Budi, atap biru")
-const ROOF_HEX={'merah':'#C4402F','merah muda':'#E58AA6','biru':'#2F74B5','biru muda':'#6FB3E0','hijau':'#2E9C6A','hijau muda':'#7CC46A','kuning':'#E2B23A',
-  'oranye':'#E07A3E','ungu':'#8E5AA8','ungu muda':'#B79AD8','coklat':'#8E5A3C','hitam':'#3A3A3A','abu-abu':'#8A8F94','putih':'#E9E6DD','emas':'#D4A72C',
-  'tosca':'#2AA39A','navy':'#24406E','krem':'#E8D6AE','marun':'#7A2333','terakota':'#C0643F'};
-// warna dinding: versi lebih lembut supaya atap tetap menonjol
-const WALL_HEX={'merah':'#D9725E','merah muda':'#F2B8C8','biru':'#7FA8D6','biru muda':'#BFDDF0','hijau':'#8CC7A3','hijau muda':'#C6E3B0','kuning':'#F3DB8A',
-  'oranye':'#F0B184','ungu':'#B79AD0','ungu muda':'#D9C9EE','coklat':'#B88A69','hitam':'#4A4A4A','abu-abu':'#B9BDC1','putih':'#FBF8F1','emas':'#E8C766',
-  'tosca':'#8FD3C9','navy':'#5A719B','krem':'#F1E4C6','marun':'#A9505E','terakota':'#DB8E6E'};
+// palet senja tropis: atap lebih gelap + earthy
+const ROOF_HEX={'merah':'#8B3A2E','merah muda':'#C67A7A','biru':'#2F6BA5','biru muda':'#6FA8D0','hijau':'#2E8C5A','hijau muda':'#7CC46A','kuning':'#D4A02A',
+  'oranye':'#D4762A','ungu':'#7A4A98','ungu muda':'#A98BC7','coklat':'#7A4A2C','hitam':'#2A2A2A','abu-abu':'#7A7F84','putih':'#E0DDD4','emas':'#C49A2C',
+  'tosca':'#2A938A','navy':'#1E3A5E','krem':'#D8C69E','marun':'#5E1A23','terakota':'#A8543A'};
+// warna dinding: versi lembut senja (lebih hangat dari negerikomen)
+const WALL_HEX={'merah':'#C76A5E','merah muda':'#E8B0C0','biru':'#6FA0CC','biru muda':'#A8D0E8','hijau':'#7CC0A0','hijau muda':'#B8DCA0','kuning':'#E8D080',
+  'oranye':'#E0A878','ungu':'#A98BC8','ungu muda':'#C9B8E8','coklat':'#A87A5A','hitam':'#3A3A3A','abu-abu':'#A9ADB1','putih':'#F0EDE4','emas':'#D8B85E',
+  'tosca':'#7FCFC6','navy':'#4A619B','krem':'#E8D8B8','marun':'#994A50','terakota':'#C9805E'};
 const ROOF_WORDS=[['merah muda','merah muda'],['pink','merah muda'],['biru muda','biru muda'],['biru cerah','biru muda'],['biru langit','biru muda'],['hijau muda','hijau muda'],
   ['ungu muda','ungu muda'],['lilac','ungu muda'],['lilak','ungu muda'],['lavender','ungu muda'],['merah','merah'],['red','merah'],['biru','biru'],['blue','biru'],
   ['hijau','hijau'],['green','hijau'],['kuning','kuning'],['yellow','kuning'],['oranye','oranye'],['orange','oranye'],['jingga','oranye'],['ungu','ungu'],['purple','ungu'],
@@ -746,8 +747,10 @@ function parseNick(text){const seg=String(text||'').split(/[,|\n.!]/)[0].trim();
   if(!seg||seg.length>20||/\d|@|#|http/.test(seg)||NICK_STOP.test(seg)||parseRoof(seg))return '';
   const words=seg.split(/\s+/);if(words.length>3)return '';
   return words.map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ')}
-const ROOFS=['#C4502F','#B5452A','#CF6438','#A93D28','#C4502F','#B9563A','#6F8FA3','#5E8B5A','#C4502F','#8E5A3C'];
-const WALLS=['#F3E8D2','#EAD7B5','#DCE7EA','#F1DDD6','#E3EBD3','#F6F1E6'];
+// Palet senja tropis — merah bata gelap + oranye senja + coklat kayu
+const ROOFS=['#8B3A2E','#A04528','#D4762A','#7A2E20','#B85A26','#9C4A30','#C46830','#6F5A3A','#D4823A','#8E5A3C'];
+// dinding: krem hangat + coklat kayu muda (lebih earthy dari negerikomen)
+const WALLS=['#E8D4B0','#D9C49A','#E0D0A8','#D6B88A','#E4D5B5','#C9B790'];
 const roofHex=r=>(typeof r.roof==='string'&&/^#[0-9a-fA-F]{6}$/.test(r.roof)?r.roof:null)||ROOF_HEX[r.roof]||ROOFS[Math.floor(ih(r.x,r.y,5)*ROOFS.length)];
 
 /* ---------- gambar ---------- */

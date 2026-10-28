@@ -4,6 +4,10 @@
 set -euo pipefail
 cd /root/dusunkita
 
+if [ -f .env ]; then
+  set -a; source .env; set +a
+fi
+
 if [ -z "${IG_TOKEN:-}" ]; then
   echo "IG_TOKEN belum di-set." >&2
   exit 1
