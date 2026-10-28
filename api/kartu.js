@@ -197,6 +197,37 @@ function awalMinggu(now = Date.now()) {
   const w = new Date(now + 7 * 3600e3); const dow = (w.getUTCDay() + 6) % 7;
   return Date.UTC(w.getUTCFullYear(), w.getUTCMonth(), w.getUTCDate() - dow) - 7 * 3600e3;
 }
+
+// === HARTA KARUN (sama persis dengan Negeri Komen) ===
+const HARTA_MULAI = Date.UTC(2026, 10, 1, 12, 0); // Senin 2 Nov 2026 19:00 WIB (mulai dari nol Dusun Kita)
+const HARTA_MAKS = 3;
+const HARTA_W = [{ k: 'siang', ic: '☀️', a: 12 * 60, b: 14 * 60 }, { k: 'sore', ic: '🌇', a: 15 * 60 + 30, b: 17 * 60 + 30 }, { k: 'malam', ic: '🌙', a: 19 * 60, b: 21 * 60 }];
+const HARTA_KAT = ['hutan', 'waduk', 'gunung', 'gerbang', 'pekarangan', 'sawah', 'pantai'];
+const hartaHmac = s => crypto.createHmac('sha256', 'harta:' + KV_TOKEN).update(s).digest();
+const tglH = ms => new Date(ms + 7 * 3600e3).toISOString().slice(0, 10);
+function hartaJadwal(D, tgl) {
+  const h = hartaHmac('hari:' + tgl), dayMs = Date.parse(tgl + 'T00:00:00Z') - 7 * 3600e3;
+  let W = HARTA_W.slice(); if (h[0] % 2 === 0) W.splice(h[1] % 3, 1);
+  if (tgl === tglH(HARTA_MULAI)) W = HARTA_W.filter(w => w.k === 'malam');
+  const w0 = awalMinggu(dayMs + 12 * 3600e3), he = hartaHmac('emas:' + w0), dow = Math.round((dayMs - w0) / 864e5);
+  const emasK = dow === he[0] % 7 ? W[he[1] % W.length].k : null;
+  const res = D.residents || [], pakai = new Set();
+  return W.map((w, i) => { const b = 2 + i * 6, muncul = dayMs + (w.a + h[b] % 61) * 60e3, sampai = dayMs + w.b * 60e3;
+    let kat = HARTA_KAT[h[b + 1] % HARTA_KAT.length]; for (let j = 0; pakai.has(kat) && j < 7; j++) kat = HARTA_KAT[(HARTA_KAT.indexOf(kat) + 1) % HARTA_KAT.length]; pakai.add(kat);
+    const emas = w.k === emasK, o = { k: w.k, ic: w.ic, a: w.a, b: w.b, muncul, sampai, emas, hadiah: emas ? 4 : 1 + h[b + 2] % 2, kat, f: h[b + 3] / 256, g: h[b + 4] / 256 };
+    if (kat === 'pekarangan' && res.length) o.u = String(res[(h[b + 3] * 256 + h[b + 4]) % res.length].name).toLowerCase();
+    return o }).filter(o => o.sampai > HARTA_MULAI);
+}
+async function hartaInfo(D, now = Date.now()) {
+  const tgl = tglH(now), J = hartaJadwal(D, tgl), w0 = awalMinggu(now);
+  const [win, log] = await kvMany([['MGET', ...J.map(o => 'harta:' + tgl + ':' + o.k)].concat(J.length ? [] : ['harta:x']), ['LRANGE', 'harta:log:' + w0, 0, 59]]);
+  const slot = J.map((o, i) => { const u = jparse((win || [])[i]); const st = u ? 'ketemu' : now < o.muncul ? 'nanti' : now < o.sampai ? 'ada' : 'kabur';
+    const x = { k: o.k, ic: o.ic, a: o.a, b: o.b, st };
+    if (st === 'ada') Object.assign(x, { muncul: o.muncul, sampai: o.sampai, kat: o.kat, f: o.f, g: o.g, u: o.u || null });
+    if (st === 'ketemu') Object.assign(x, { muncul: o.muncul, oleh: u.u, at: u.at, hadiah: o.hadiah, emas: o.emas, kat: o.kat });
+    return x });
+  return { tgl, now, maks: HARTA_MAKS, mulai: HARTA_MULAI, slot, pemburu: (log || []).map(jparse).filter(Boolean) };
+}
 async function sesi(req) {
   const t = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(t)) return null;
@@ -842,6 +873,37 @@ export default async function handler(req, res) {
       if (body.hapus) await kv(['LREM', 'trk:tanpakode', 1, String(body.hapus)]);
       const [L, last] = await kvMany([['LRANGE', 'trk:tanpakode', 0, 49], ['GET', 'trk:terakhir']]);
       return res.status(200).json({ list: (L || []).map(x => ({ raw: x, ...(jparse(x) || {}) })), terakhir: jparse(last) });
+    }
+    if (aksi === 'harta-info' && req.method === 'GET') {
+      const D0 = await dataKampung(req);
+      res.setHeader('Cache-Control', 's-maxage=8, stale-while-revalidate=20');
+      return res.status(200).json(await hartaInfo(D0));
+    }
+    if (aksi === 'harta') {
+      const now = Date.now(), tgl = tglH(now), o = hartaJadwal(D, tgl).find(x => x.k === String(body.k || ''));
+      if (!o || now < o.muncul) return res.status(400).json({ error: 'Petinya belum muncul 👀' });
+      if (now >= o.sampai) return res.status(400).json({ error: 'Yah, harta karunnya udah kabur! Besok lagi 👀' });
+      if (!warga(D, s.u)) return res.status(403).json({ error: 'Cuma warga yang punya rumah yang bisa ambil harta karun.' });
+      if (!(await kv(['SET', 'hartajeda:' + s.u, '1', 'NX', 'EX', 3]))) return res.status(429).json({ error: 'Pelan-pelan, coba lagi sebentar.' });
+      const w0 = awalMinggu(now), kw = 'harta:win:' + w0, kunci = 'harta:' + tgl + ':' + o.k;
+      const sudah = jparse(await kv(['GET', kunci])); if (sudah) return res.status(409).json({ error: sudah.u === s.u ? 'Peti ini udah kamu ambil 🎉' : 'Keduluan @' + sudah.u + '! Coba peti berikutnya 💨', oleh: sudah.u });
+      const n0 = +(await kv(['HGET', kw, s.u])) || 0; if (n0 >= HARTA_MAKS) return res.status(400).json({ error: 'Kamu udah menang ' + HARTA_MAKS + '× pekan ini, kasih kesempatan yang lain ya! 🙌' });
+      if (!(await kv(['SET', kunci, JSON.stringify({ u: s.u, at: now }), 'NX', 'EX', 8 * 864e2]))) { const x = jparse(await kv(['GET', kunci])) || {}; return res.status(409).json({ error: 'Keduluan @' + (x.u || 'warga lain') + '! Coba peti berikutnya 💨', oleh: x.u }) }
+      const ev = { u: s.u, at: now, k: o.k, kat: o.kat, hadiah: o.hadiah, emas: o.emas };
+      const [n1, saldo] = await kvMany([['HINCRBY', kw, s.u, 1], ['HINCRBY', 'saldo', s.u, o.hadiah], ['EXPIRE', kw, 40 * 864e2], ['LPUSH', 'saldo:log:' + s.u, JSON.stringify({ at: now, n: o.hadiah, ket: (o.emas ? 'peti emas' : 'harta karun') + ' ' + o.ic })], ['LTRIM', 'saldo:log:' + s.u, 0, 49],
+        ['LPUSH', 'harta:log:' + w0, JSON.stringify(ev)], ['LTRIM', 'harta:log:' + w0, 0, 99], ['EXPIRE', 'harta:log:' + w0, 40 * 864e2]]);
+      return res.status(200).json({ ok: true, ...ev, menang: +n1 || 1, maks: HARTA_MAKS, saldo: +saldo || 0 });
+    }
+    if (aksi === 'bersih-antre') {
+      if (s.u !== OWNER) return res.status(403).json({ error: 'Khusus kepala desa' });
+      const umur = Math.max(.25, Math.min(30, +body.hari || 2)) * 864e5, now = Date.now(), calon = [];
+      for (const j of Object.keys(JENIS)) { if (j === 'ruko') continue; const kodes = await kv(['SMEMBERS', j + ':antre']) || []; if (!kodes.length) continue;
+        const vals = await kvMany(kodes.map(k => ['GET', j + ':req:' + k]));
+        kodes.forEach((k, i) => { const v = jparse(vals[i]); if (v && v.status === 'menunggu' && !(+v.bayar > 0) && now - (+v.at || now) > umur) calon.push({ j, k, v }) }) }
+      if (!body.kirim) return res.status(200).json({ n: calon.length, contoh: calon.slice(0, 5).map(c => c.k + ' · @' + c.v.u) });
+      for (const c of calon) { await kvMany([['SET', c.j + ':req:' + c.k, JSON.stringify({ ...c.v, status: 'kedaluwarsa', oleh: 'Pak RT' }), 'EX', 7 * 864e2], ['SREM', c.j + ':antre', c.k]]);
+        if (await kv(['GET', c.j + ':user:' + c.v.u]) === c.k) await kv(['DEL', c.j + ':user:' + c.v.u]) }
+      return res.status(200).json({ ok: true, n: calon.length });
     }
     if (aksi === 'cari-kode') {
       if (s.u !== OWNER) return res.status(403).json({ error: 'Khusus kepala desa' });
