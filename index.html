@@ -3465,7 +3465,7 @@ const KK_WARNA=['merah','merah muda','oranye','terakota','kuning','emas','hijau'
 function kkExtra(u,ex){const i=kkResIdx(u);if(i<0||!ex||!ex.length)return;ex=ex.map(e=>e&&typeof e.note==='string'?Object.assign({},e,{note:e.note.replace('(traktir 1 Bata)','(1 Receh)')}):e);const r=RES[i];if(!r._dataHist)r._dataHist=Array.isArray(r.history)?r.history:[];
   r.history=[...r._dataHist,...ex.map(e=>({...e,x:1}))];kkPakaiLokal(i,histOf(r).length-1)}
 const kkNamaWarna=w=>/^#/.test(w||'')?w.toUpperCase():(w||'acak');
-function kkTrakteerUrl(){const u=D.trakteer&&D.trakteer.url;return u&&/^https:\/\/(www\.)?trakteer\.id\//.test(u)?u:'https://trakteer.id/dusunkita.id'}
+function kkTrakteerUrl(){const u=D.trakteer&&D.trakteer.url;return u&&/^https:\/\/(www\.)?trakteer\.id\//.test(u)?u:'https://trakteer.id/dusunkitaindonesia'}
 // tombol dengan ikon bata (bata.png) di depan harga
 function kkGBtn(depan,harga,cls,fn){const b=kkBtn('',cls,fn);const im=el('img','kk-gico');im.src=/Receh/.test(harga)?'receh.svg':'bata.png';im.alt='';b.append(document.createTextNode(depan),im,document.createTextNode(harga));return b}
 function kkWarna(body,c,i,n){const r0=RES[i],V=histOf(r0);if(n==null)n=aktifOf(r0);
@@ -4067,7 +4067,7 @@ async function bukaPindahan(tab){if(!PDH_ON()){toast('🚚🚁 Sabar ya… bangu
     if(c.pindahKu&&Date.now()<c.pindahKu.at+c.pindahKu.dur*1000){const pk=c.pindahKu;const p=el('p','pdh-st');p.textContent=`📦 Rumahmu lagi diangkut ${pk.via==='heli'?'Helikoper':'Truk Titut'} · ⏳ ${pdhSisa(pk,Date.now())} lagi`;body.append(p)}
     else if(jd>0)body.append(el('p','pdh-st','⏳ Bisa pindah lagi '+pdhJeda(jd)+' lagi'));
     if(tk<1)act.append(kkBtn(`🎫 Beli tiket · ${P.h} Receh`,'gold3',async e=>{const bt=e.currentTarget;if(!await kkYakin(`Beli tiket ${P.n}?`,`${P.h} Receh dari Recehan-mu.${tab==='heli'?' Termasuk 🎁 1 tiket biasa (Truk Titut).':''} Tiket tidak kedaluwarsa, pakai kapan aja.`,'Ya, beli'))return;bt.disabled=true;const r=await kkApi('pindah-beli',{jenis:tab},true);bt.disabled=false;
-      if(!r.ok){msg.className='kk-msg err';msg.textContent=r.error||'Gagal';if(/Recehan belum cukup/.test(r.error||'')){const tr=kkBtn('Traktir Bata buat isi Receh','sm',()=>{const u=(window.NK_DATA&&window.NK_DATA.trakteer&&window.NK_DATA.trakteer.url)||'https://trakteer.id/dusunkita.id';window.open(u,'_blank')});msg.append(document.createElement('br'),tr)}return}
+      if(!r.ok){msg.className='kk-msg err';msg.textContent=r.error||'Gagal';if(/Recehan belum cukup/.test(r.error||'')){const tr=kkBtn('Traktir Bata buat isi Receh','sm',()=>{const u=(window.NK_DATA&&window.NK_DATA.trakteer&&window.NK_DATA.trakteer.url)||'https://trakteer.id/dusunkitaindonesia';window.open(u,'_blank')});msg.append(document.createElement('br'),tr)}return}
       toast('🎫 Tiket '+P.n+(tab==='heli'?' + 🎁 Tiket Truk Titut':'')+' masuk! Sekarang pilih kavling tujuanmu.');bukaPindahan(tab)}));
     const jalanKu=c.pindahKu&&Date.now()<c.pindahKu.at+c.pindahKu.dur*1000;
     if(tk>=1){const ub=kkBtn(jalanKu?'📦 Rumahmu lagi diangkut…':jd>0?'⏳ Tiket bisa dipakai '+pdhJeda(jd)+' lagi':`🚀 Gunakan tiket untuk pindah`,'gold3 pdh-pakai',()=>{kkTutup();mulaiPilih(tab,c.u)});if(jalanKu||jd>0)ub.disabled=true;act.append(ub);
