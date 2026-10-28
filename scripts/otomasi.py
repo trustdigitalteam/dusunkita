@@ -26,7 +26,24 @@ WIB = timezone(timedelta(hours=7))
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "scripts", "state.json")
 OUT = os.path.join(ROOT, "data.js")
-G = "https://graph.instagram.com/"
+
+# Grid peta = identik dengan index.html (const T=40,N=91,C=45,S=6).
+C = 45
+S = 6
+N = 91
+
+
+def mod(a, m):
+    return a % m
+
+
+def is_road(x, y):
+    return mod(x - C, S) == 0 or mod(y - C, S) == 0
+
+
+def tiles_of(b):
+    w = b.get("w") or 3
+    return [(b["x"] + i, b["y"] + j) for i in range(w) for j in range(w)]
 
 # warna yang dikenali -> kode warna peta (wall/roof)
 WARNA = {
@@ -59,6 +76,42 @@ def fb(url, params, token):
     return get_json("https://graph.facebook.com/v21.0/" + url + "?" + urlencode(q))
 
 
+def resolve_ig(token, username="dusunkita.id"):
+    """Cari IG business account berdasarkan username (bukan media terbanyak).
+
+    Kembalikan (ig_id, page_token) atau (None, None).
+    """
+    pages = fb("me/accounts", {"fields": "id,name,access_token", "limit": 100}, token)
+    for p in pages.get("data", []):
+        ptok = p.get("access_token", token)
+        try:
+            r = fb(p["id"], {"fields": "instagram_business_account{id,username,media_count}"}, ptok)
+            iba = r.get("instagram_business_account")
+            if iba and iba.get("id"):
+                uname = (iba.get("username") or "").lower()
+                if username and uname == username.lower():
+                    return iba["id"], ptok
+                if not username:
+                    return iba["id"], ptok
+        except Exception:
+            continue
+    return None, None
+
+
+def fetch_followers(token):
+    """Ambil jumlah follower IG (untuk sync angka di web)."""
+    try:
+        ig_id, ptok = resolve_ig(token)
+        if not ig_id:
+            return None, None
+        f = fb(ig_id, {"fields": "followers_count,username"}, ptok)
+        if f.get("followers_count") is not None:
+            return int(f["followers_count"]), f.get("username")
+    except Exception:
+        pass
+    return None, None
+
+
 def load_state():
     if os.path.exists(STATE):
         with open(STATE) as f:
@@ -78,25 +131,11 @@ def fetch_comments(token, limit=5, max_pages=10):
     token = page access token (dari /me/accounts), yang sudah bisa akses
     instagram_business_account + instagram_manage_comments.
     """
-    # 1. cari IG business account yang terhubung ke page (pilih yang punya media)
-    pages = fb("me/accounts", {"fields": "id,name,access_token", "limit": 100}, token)
-    page_token = token
-    ig_id = None
-    best = None  # (media_count, ig_id, page_token)
-    for p in pages.get("data", []):
-        try:
-            r = fb(p["id"], {"fields": "instagram_business_account{id,username,media_count}"}, p.get("access_token", token))
-            iba = r.get("instagram_business_account")
-            if iba and iba.get("id"):
-                mc = int(iba.get("media_count") or 0)
-                if best is None or mc > best[0]:
-                    best = (mc, iba["id"], p.get("access_token", token))
-        except Exception:
-            continue
-    if not best:
-        log("ERROR: tidak ada IG business account terhubung ke page. Link dulu @dusunkita.id ke FB Page.")
+    # 1. cari IG business account @dusunkita.id (pin username, bukan media terbanyak)
+    ig_id, page_token = resolve_ig(token)
+    if not ig_id:
+        log("ERROR: IG @dusunkita.id tidak ditemukan. Link dulu ke FB Page 'Dusun Kita Virtual'.")
         return []
-    ig_id, page_token = best[1], best[2]
     log(f"  pakai IG business account {ig_id}")
 
     # 2. ambil media terbaru
@@ -174,20 +213,50 @@ def parse_warga(rows):
         if u.lower() in seen:
             continue
         seen.add(u.lower())
-        warga.append({"name": u, "nick": nama, "roof": roof, "wall": wall, "day": None})
+        warga.append({"name": u, "nick": nama, "roof": roof, "wall": wall, "teks": teks, "day": None})
     return warga
 
 
 def next_slot(state):
-    """Cari pekarangan kosong (x,y) di grid kampung."""
-    used = {(r["x"], r["y"]) for r in state.get("residents", [])}
-    # grid 50 pekarangan: 10 kolom x 5 baris, mulai offset 44,44 seperti referensi
-    for i in range(50):
-        x = 44 + (i % 10)
-        y = 44 + (i // 10)
-        if (x, y) not in used:
-            return x, y
-    return 44 + (len(used) % 10), 44 + (len(used) // 10)
+    """Cari pekarangan kosong (x,y) sesuai grid peta index.html.
+
+    Mirip logika PLOTS di index.html: kavling = bukan jalan + bukan RESERVED,
+    dipilih dari yang terdekat ke pusat (C,C).
+    """
+    residents = state.get("residents", []) or []
+    buildings = state.get("buildings", []) or []
+    occ = {(r["x"], r["y"]) for r in residents}
+    used = set()
+    for b in buildings:
+        for t in tiles_of(b):
+            used.add(t)
+    # RESERVED: posisi OWNER (C+1,C+1) + sekitar warung/pos ronda (dari index.html)
+    reserved = {(C + 1, C + 1), (C - 1, C + 1), (C + 1, C - 1), (C - 1, C - 1)}
+    for (x0, y0) in [(C + 2, C - 4), (C - 4, C + 2)]:
+        for i in range(3):
+            for j in range(3):
+                reserved.add((x0 + i, y0 + j))
+
+    plots = []
+    for x in range(1, N - 1):
+        for y in range(1, N - 1):
+            if is_road(x, y) or (x, y) in reserved:
+                continue
+            lx = mod(x - C, S)
+            ly = mod(y - C, S)
+            if not (lx == 1 or lx == 5 or ly == 1 or ly == 5):
+                continue
+            if max(abs(x - C), abs(y - C)) > 43:
+                continue
+            if (x, y) in occ or (x, y) in used:
+                continue
+            plots.append((x, y, abs(x - C) + abs(y - C)))
+
+    plots.sort(key=lambda p: p[2])
+    if plots:
+        return plots[0][0], plots[0][1]
+    # fallback: grid sederhana kalau penuh
+    return C + (len(occ) % S), C + (len(occ) // S)
 
 
 ANTRIAN = os.path.join(ROOT, "scripts", "antrian.json")
@@ -271,6 +340,10 @@ def main():
         # tandai approved -> applied, hapus rejected
         state["day"] += 1
         state["updated"] = datetime.now(WIB).strftime("%Y-%m-%d")
+        fl, uname = fetch_followers(token)
+        if fl is not None:
+            state["followers"] = fl
+            log(f"  follower: {fl} (@{uname})")
         save_state(state)
         # bersihkan antrian yang sudah diproses
         antrian = [a for a in antrian if a.get("status") == "pending"]
@@ -324,7 +397,11 @@ def main():
 
     state["day"] += 1
     state["updated"] = datetime.now(WIB).strftime("%Y-%m-%d")
-    state["followers"] = state.get("followers", 1)
+    # sync follower dari IG
+    fl, uname = fetch_followers(token)
+    if fl is not None:
+        state["followers"] = fl
+        log(f"  follower: {fl} (@{uname})")
     save_state(state)
     log(f"  +{added} warga ditambahkan (hari -> {state['day']})")
 
