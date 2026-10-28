@@ -11,20 +11,20 @@
 //   POST pilih   {n} (Bearer) → pakai versi rumah ke-n (jatah 3x per minggu, reset Senin 00.00 WIB)
 //   POST keluar-lain (Bearer) → keluarkan semua perangkat lain
 //   POST keluar  (Bearer)     → keluarkan perangkat ini
-//   POST aktifkan {target} (Bearer kartu @dusunkita) → token aktivasi manual (jalur cadangan lewat DM)
+//   POST aktifkan {target} (Bearer kartu @dusunkita.id) → token aktivasi manual (jalur cadangan lewat DM)
 //   POST minta-ubah {jenis,...} (Bearer) → kode pesanan; warga traktir Genteng dengan kode itu di pesan traktiran
 //        jenis: warna {wall,roof,n} 1 Genteng · emas 2 Genteng · ruko {wall,roof} 20 Genteng · item {items:[id],teks} sesuai katalog
 //        (minta-warna lama tetap jalan = minta-ubah jenis warna)
 //   POST batal-ubah {jenis} (Bearer) → batalkan pesanan jenis itu
 //   POST jalan {id} (Bearer) → motor/sepeda yang dipajang langsung keliling kampung (jeda 60 detik)
 //   POST pajang {ids} (Bearer) → pilih maks 3 item koleksi yang tampil di pekarangan
-//   POST cicil {kode,n} (Bearer kartu @dusunkita) → catat Genteng cicilan yang sudah masuk untuk pesanan itu
-//   POST tanpa-kode {hapus?} (Bearer kartu @dusunkita) → traktiran dari webhook Trakteer yang tidak memuat kode pesanan
+//   POST cicil {kode,n} (Bearer kartu @dusunkita.id) → catat Genteng cicilan yang sudah masuk untuk pesanan itu
+//   POST tanpa-kode {hapus?} (Bearer kartu @dusunkita.id) → traktiran dari webhook Trakteer yang tidak memuat kode pesanan
 //   POST bayar-saldo {kode} (Bearer) → lunasi pesanan pakai Saldo Genteng
-//   POST tambah-saldo {target,n,hapus?} (Bearer kartu @dusunkita) → masukkan traktiran tanpa kode ke saldo warga
-//   POST cari-kode {kode} (Bearer kartu @dusunkita) → cari pesanan lewat kode, termasuk yang dibatalkan/diganti warga
-//   POST antre-ubah / konfirmasi-ubah {kode,ok} (Bearer kartu @dusunkita) → cek & setujui pesanan
-//   POST reset-jatah {target} (Bearer kartu @dusunkita) → kembalikan jatah ganti rumah warga minggu ini
+//   POST tambah-saldo {target,n,hapus?} (Bearer kartu @dusunkita.id) → masukkan traktiran tanpa kode ke saldo warga
+//   POST cari-kode {kode} (Bearer kartu @dusunkita.id) → cari pesanan lewat kode, termasuk yang dibatalkan/diganti warga
+//   POST antre-ubah / konfirmasi-ubah {kode,ok} (Bearer kartu @dusunkita.id) → cek & setujui pesanan
+//   POST reset-jatah {target} (Bearer kartu @dusunkita.id) → kembalikan jatah ganti rumah warga minggu ini
 import crypto from 'crypto';
 import { terapkan, bolehOtomatis } from './_terapkan.js';
 import { EKS, DK } from './_kavling.js';
@@ -62,7 +62,7 @@ async function heliTerjual() { const a = await kv(['HGETALL', 'tiket']) || []; l
 const KV_URL = String(process.env.KV_REST_API_URL || '').replace(/\/$/, '');
 const KV_TOKEN = String(process.env.KV_REST_API_TOKEN || '');
 const IG_TOKEN = String(process.env.IG_TOKEN || '').trim().replace(/^["']|["']$/g, '');
-const OWNER = 'dusunkita';
+const OWNER = 'dusunkita.id';
 const LOKER_NEGERI = { rental: { tutup: Date.UTC(2026, 9, 30, 17, 0) }, proyek: { tutup: Date.UTC(2026, 9, 30, 17, 0) } }; // tutup Jumat 30 Okt 24.00 WIB
 const PENANDA = 'kartukomen'; // hashtag di caption postingan Kartu Komen yang di-pin
 const KUNCI_DETIK = 30 * 60;
@@ -283,13 +283,13 @@ async function segarkanKomen() {
     }
     cur[id] = after || (j.paging && j.paging.cursors && j.paging.cursors.after) || null;
   }
-  // sekali di awal: cari komentar petunjuk @dusunkita di semua halaman (maks 20) supaya balasannya ikut terbaca
+  // sekali di awal: cari komentar petunjuk @dusunkita.id di semua halaman (maks 20) supaya balasannya ikut terbaca
   if (!induk.size && !(await kv(['GET', 'igc:indukcari']))) {
     await kv(['SET', 'igc:indukcari', '1', 'EX', 600]);
     for (const id of media) { let k = await getC(id); tambah(k);
       for (let p = 0; p < 20 && k.paging && k.paging.next && k.paging.cursors; p++) { k = await getC(id, k.paging.cursors.after); tambah(k) } }
   }
-  // komentar petunjuk milik @dusunkita (biasanya di-pin): balasannya dibaca ulang tiap penyegaran,
+  // komentar petunjuk milik @dusunkita.id (biasanya di-pin): balasannya dibaca ulang tiap penyegaran,
   // karena komentar induknya sudah lewat dari halaman yang dipindai
   const indukL = [...induk].slice(-6);
   for (const cid of indukL) { try {
@@ -543,7 +543,7 @@ export default async function handler(req, res) {
         if (info.emas) return res.status(400).json({ error: 'Rumahmu sudah punya bendera emas.' });
         isi = { harga: 2 };
       } else if (jenis === 'ruko') {
-        return res.status(400).json({ error: 'Ruko sedang ditutup sementara. Mau kerja sama usaha? DM @dusunkita ya.' }); // ruko nonaktif
+        return res.status(400).json({ error: 'Ruko sedang ditutup sementara. Mau kerja sama usaha? DM @dusunkita.id ya.' }); // ruko nonaktif
         const wall = String(body.wall || ''), roof = String(body.roof || '');
         if (!okWarna(wall) || !okWarna(roof)) return res.status(400).json({ error: 'Pilih warna ruko dulu.' });
         isi = { wall, roof, harga: 20 };

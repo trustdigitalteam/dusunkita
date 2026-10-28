@@ -1,4 +1,4 @@
-// Jumlah follower @dusunkita langsung dari Instagram API.
+// Jumlah follower @dusunkita.id langsung dari Instagram API.
 // Token disimpan aman di Vercel (Environment Variable IG_TOKEN), tidak pernah dikirim ke browser.
 export default async function handler(req, res) {
   const token = String(process.env.IG_TOKEN || '').trim().replace(/^["']|["']$/g, '');

@@ -17,7 +17,7 @@ OUT = os.path.join(ROOT, "data.js")
 
 BASE = {
     "version": 1,
-    "account": "dusunkita",
+    "account": "dusunkita.id",
     "day": 1,
     "updated": "",
     "kavling": 50,
@@ -25,7 +25,7 @@ BASE = {
     "target": 1000,
     "supOthers": 0,
     "tontonan": {"akun": [], "items": []},
-    "trakteer": {"url": "https://trakteer.id/dusunkita", "unit": "Bata"},
+    "trakteer": {"url": "https://trakteer.id/dusunkita.id", "unit": "Bata"},
     "voucher": {"url": "", "label": ""},
     "toko": {"csv": "", "form": "", "fUser": "", "fKode": ""},
     "quest": {},

@@ -1,6 +1,6 @@
 # Dusun Kita · situs publik
 
-Situs statis untuk link bio @dusunkita (dusunkita.vercel.app).
+Situs statis untuk link bio @dusunkita.id (dusunkita.id.vercel.app).
 
 | File | Isi |
 |---|---|

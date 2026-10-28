@@ -1,7 +1,7 @@
 {
  "name": "Dusun Kita",
  "short_name": "Dusun Kita",
- "description": "Dusun kecil dibangun tetangganya. Komen di @dusunkita, dapat satu pekarangan.",
+ "description": "Dusun kecil dibangun tetangganya. Komen di @dusunkita.id, dapat satu pekarangan.",
  "start_url": "/?app=1",
  "scope": "/",
  "display": "standalone",

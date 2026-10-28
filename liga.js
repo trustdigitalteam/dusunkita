@@ -158,10 +158,10 @@ async function kartuBagikan(){try{await document.fonts.ready}catch(e){}
   if(st.main&&!st.rp){const g=laga(st.d,st.s);info='🔴 LIVE: '+TIM[g.A].nama+' vs '+TIM[g.B].nama}else if(st.s>=0){const g=laga(hariKe(t),st.s);info='Berikutnya '+String(JAM[st.s]).padStart(2,'0')+'.00: '+TIM[g.A].nama+' vs '+TIM[g.B].nama}else info='Laga lagi besok mulai 13.00 WIB';
   c.textAlign='center';c.fillStyle='#fff';let fi=36;c.font=`700 ${fi}px ${F}`;while(c.measureText(info).width>940&&fi>22){fi-=2;c.font=`700 ${fi}px ${F}`}c.fillText(info,540,yb+20);
   // ajakan
-  R(90,1650,900,220,36,KUNING,6);c.fillStyle=INK;c.font=`600 34px ${F}`;c.fillText('Nonton live tiap hari 13.00–20.00 WIB',540,1704);c.font=`800 64px ${F}`;c.fillText('@dusunkita',540,1774);c.font=`600 30px ${F}`;c.fillStyle='#5B6860';c.fillText('dusunkita.my.id',540,1836);
+  R(90,1650,900,220,36,KUNING,6);c.fillStyle=INK;c.font=`600 34px ${F}`;c.fillText('Nonton live tiap hari 13.00–20.00 WIB',540,1704);c.font=`800 64px ${F}`;c.fillText('@dusunkita.id',540,1774);c.font=`600 30px ${F}`;c.fillStyle='#5B6860';c.fillText('dusunkita.my.id',540,1836);
   return await new Promise(r=>k.toBlob(r,'image/png'))}
 let pvU=null;async function bukaBagikan(){const bt=root.querySelector('.lg-sh');bt.disabled=true;bt.textContent='Menyiapkan gambar…';
-  try{const b=await kartuBagikan(),f=new File([b],'liga-dusun-dusunkita.png',{type:'image/png'});if(pvU)URL.revokeObjectURL(pvU);pvU=URL.createObjectURL(b);
+  try{const b=await kartuBagikan(),f=new File([b],'liga-dusun-dusunkita.id.png',{type:'image/png'});if(pvU)URL.revokeObjectURL(pvU);pvU=URL.createObjectURL(b);
     const o=document.createElement('div');o.className='lg-pv';o.innerHTML=`<div class="lg-pvb"><img alt="Klasemen Liga Dusun"><div class="lg-row"><button class="lg-go">📤 Bagikan</button><a class="lg-dl" download="${f.name}">⬇️ Simpan gambar</a></div><button class="lg-pvx">Tutup</button></div>`;
     o.querySelector('img').src=pvU;o.querySelector('.lg-dl').href=pvU;const can=!!(navigator.canShare&&navigator.canShare({files:[f]}));const go=o.querySelector('.lg-go');go.hidden=!can;
     go.onclick=async()=>{try{await navigator.share({files:[f],title:'Liga Dusun · Dusun Kita',text:'Klasemen & top skor Liga Dusun di Dusun Kita ⚽ Nonton live di dusunkita.my.id'})}catch(e){}};

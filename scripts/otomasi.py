@@ -2,7 +2,7 @@
 """Dusun Kita — otomasi update harian.
 
 Alur (sama dengan ambil-komen.html, tapi otomatis):
-  1. Scrape komentar postingan terbaru @dusunkita via Graph API Instagram
+  1. Scrape komentar postingan terbaru @dusunkita.id via Graph API Instagram
   2. Parse komentar "nama + warna bata + warna tembok" -> warga baru
   3. Update state.json (residents bertambah, followers, day++)
   4. Generate data.js
@@ -47,7 +47,7 @@ def log(msg):
 
 
 def get_json(url):
-    req = Request(url, headers={"User-Agent": "dusunkita-bot/1.0"})
+    req = Request(url, headers={"User-Agent": "dusunkita.id-bot/1.0"})
     with urlopen(req, timeout=30) as r:
         return json.loads(r.read().decode())
 
@@ -126,7 +126,7 @@ def parse_warga(rows):
         if len(teks) < 2:
             continue
         # skip komentar balasan petunjuk / admin
-        if u.lower() in ("dusunkita",):
+        if u.lower() in ("dusunkita.id",):
             continue
         roof, wall = parse_warna(teks)
         # nama = kata-kata sebelum warna, atau username

@@ -1,6 +1,6 @@
 window.NK_DATA = {
  "version": 1,
- "account": "dusunkita",
+ "account": "dusunkita.id",
  "day": 1,
  "updated": "2026-10-28",
  "kavling": 50,
@@ -12,7 +12,7 @@ window.NK_DATA = {
   "items": []
  },
  "trakteer": {
-  "url": "https://trakteer.id/dusunkita",
+  "url": "https://trakteer.id/dusunkita.id",
   "unit": "Bata"
  },
  "voucher": {
