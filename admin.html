@@ -84,7 +84,8 @@ a{color:var(--gent)}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const API='/api/admin';
+const ADMIN_KEY='dusunkita-45b03625615b0371';
+const API='/api/admin?key='+ADMIN_KEY;
 const WARN={'merah':'#C4502F','merah muda':'#E58AA5','pink':'#E58AA5','biru':'#3B6FB5','biru muda':'#7FA8D9','toska':'#3FA79A','hijau':'#4C9A5A','hijau muda':'#8BC79B','kuning':'#E2B23A','orange':'#E88A2A','ungu':'#7A5BA6','ungu muda':'#A98BC7','putih':'#EDEDED','hitam':'#333','abu':'#999','coklat':'#8A5A3A','krem':'#EAD9B0'};
 function sw(c){const k=(c||'putih').toLowerCase();return '<span class="swatch" style="background:'+(WARN[k]||'#ccc')+'"></span>'+(c||'?')}
 async function jfetch(url,opt){const r=await fetch(url,opt);const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t}}}
