@@ -1,7 +1,7 @@
 window.NK_DATA = {
  "version": 1,
  "account": "dusunkita.id",
- "day": 1,
+ "day": 2,
  "updated": "2026-10-28",
  "kavling": 50,
  "followers": 1,
@@ -12,7 +12,7 @@ window.NK_DATA = {
   "items": []
  },
  "trakteer": {
-  "url": "https://trakteer.id/dusunkita.id",
+  "url": "",
   "unit": "Bata"
  },
  "voucher": {

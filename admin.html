@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Dashboard · Dusun Kita</title>
+<style>
+:root{--ink:#1C2520;--muted:#5E6B63;--line:#DCE3D8;--bg:#F5F7F1;--gent:#C4502F;--kuning:#F2C230;--daun:#2F7D5B;--merah:#B3261E}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--ink);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+header h1{margin:0;font-size:20px}header .badge{background:var(--kuning);color:var(--ink);font-weight:700;border-radius:999px;padding:2px 12px;font-size:13px}
+main{max-width:1080px;margin:0 auto;padding:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{font-size:26px;display:block;line-height:1.1}.stat span{color:var(--muted);font-size:13px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:17px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:10px 18px;cursor:pointer;background:var(--ink);color:#fff}
+button.gent{background:var(--gent)}button.ok{background:var(--daun)}button.rej{background:var(--merah)}button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.45;cursor:default}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:#EEF2EA}
+td.u{font-weight:700;white-space:nowrap}
+.swatch{display:inline-block;width:16px;height:16px;border-radius:4px;border:1px solid #999;vertical-align:-2px;margin-right:4px}
+.tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:700}
+.tag.pending{background:#FFF3CD;color:#8A6A10}.tag.approved{background:#D6F0E0;color:#1E5C3A}.tag.rejected{background:#F8D7D5;color:#8A1E18}
+.msg{margin-top:8px;font-size:13px;color:var(--muted)}.msg.ok{color:var(--daun)}.msg.err{color:var(--merah)}
+.empty{color:var(--muted);font-size:14px;padding:10px 0}
+.livebar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--daun);animation:pulse 1.5s infinite}
+.dot.off{background:#999;animation:none}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+a{color:var(--gent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛖 Dashboard Dusun Kita</h1>
+  <span class="badge" id="hdrStatus">memuat…</span>
+</header>
+<main>
+  <div class="livebar"><span class="dot" id="liveDot"></span><span id="liveTxt">Cek koneksi…</span></div>
+
+  <div class="stats">
+    <div class="stat"><b id="sDay">–</b><span>Hari ke</span></div>
+    <div class="stat"><b id="sWarga">–</b><span>Warga</span></div>
+    <div class="stat"><b id="sAntri">–</b><span>Antrian pending</span></div>
+    <div class="stat"><b id="sTarget">–</b><span>Follower / target</span></div>
+  </div>
+
+  <div class="card">
+    <h2>📥 Antrian Komentar</h2>
+    <div class="row">
+      <button id="btnScrape" class="gent">🔍 Scrape Komen IG</button>
+      <button id="btnApply" class="ok">✅ Apply yang Disetujui</button>
+      <button id="btnRefresh" class="sec">🔄 Refresh</button>
+    </div>
+    <div class="msg" id="antriMsg"></div>
+    <table>
+      <thead><tr><th>Status</th><th>@username</th><th>Nama</th><th>Bata</th><th>Tembok</th><th>Aksi</th></tr></thead>
+      <tbody id="antriTb"></tbody>
+    </table>
+    <p class="empty" id="antriEmpty" hidden>Belum ada antrian. Klik "Scrape Komen IG".</p>
+  </div>
+
+  <div class="card">
+    <h2>👥 Warga Terakhir (dari state)</h2>
+    <table>
+      <thead><tr><th>#</th><th>@username</th><th>Nama</th><th>Hari</th><th>Bata</th><th>Tembok</th></tr></thead>
+      <tbody id="wargaTb"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>🔗 Koneksi</h2>
+    <p style="margin:0;font-size:14px">
+      Web live: <a id="linkWeb" href="#" target="_blank">–</a><br>
+      Sumber data: <code>scripts/state.json</code> → <code>data.js</code> (dipush)<br>
+      Alur: video 19:00 → komen → scrape 19:30 → approve → apply → web live
+    </p>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const API='/api/admin';
+const WARN={'merah':'#C4502F','merah muda':'#E58AA5','pink':'#E58AA5','biru':'#3B6FB5','biru muda':'#7FA8D9','toska':'#3FA79A','hijau':'#4C9A5A','hijau muda':'#8BC79B','kuning':'#E2B23A','orange':'#E88A2A','ungu':'#7A5BA6','ungu muda':'#A98BC7','putih':'#EDEDED','hitam':'#333','abu':'#999','coklat':'#8A5A3A','krem':'#EAD9B0'};
+function sw(c){const k=(c||'putih').toLowerCase();return '<span class="swatch" style="background:'+(WARN[k]||'#ccc')+'"></span>'+(c||'?')}
+async function jfetch(url,opt){const r=await fetch(url,opt);const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t}}}
+async function refresh(){
+  const d=await jfetch(API+'?m=status');
+  if(d.ok){
+    $('#sDay').textContent=d.day;$('#sWarga').textContent=d.warga;$('#sAntri').textContent=d.antrian;$('#sTarget').textContent=d.followers+' / '+d.target;
+    $('#linkWeb').href=d.web;$('#linkWeb').textContent=d.web;
+    $('#hdrStatus').textContent='Hari ke-'+d.day+' · '+d.warga+' warga';
+    $('#liveDot').className='dot';$('#liveTxt').textContent='Terhubung · '+d.updated;
+    renderAntri(d.antrianList||[]);renderWarga(d.wargaList||[]);
+  }else{
+    $('#hdrStatus').textContent='error';$('#liveDot').className='dot off';$('#liveTxt').textContent='Gagal hubung API admin';
+    $('#antriMsg').className='msg err';$('#antriMsg').textContent=(d.error||'API admin tidak jalan. Pastikan /api/admin aktif di Vercel.');
+  }
+}
+function renderAntri(list){
+  const tb=$('#antriTb');tb.innerHTML='';
+  const pend=list.filter(a=>a.status==='pending');
+  $('sAntri').textContent=pend.length;
+  if(!list.length){$('#antriEmpty').hidden=false;return}
+  $('antriEmpty').hidden=true;
+  list.forEach((a,i)=>{
+    const tr=document.createElement('tr');
+    const st='<span class="tag '+a.status+'">'+a.status+'</span>';
+    tr.innerHTML='<td>'+st+'</td><td class="u">@'+a.name+'</td><td>'+a.nick+'</td><td>'+sw(a.roof)+'</td><td>'+sw(a.wall)+'</td><td></td>';
+    const td=tr.lastElementChild;
+    if(a.status==='pending'){
+      const ok=document.createElement('button');ok.textContent='✅';ok.title='Setujui';ok.className='ok';ok.style.cssText='margin-right:6px;padding:6px 10px';
+      ok.onclick=async()=>{await jfetch(API+'?m=set&name='+encodeURIComponent(a.name)+'&status=approved');refresh()};
+      const rej=document.createElement('button');rej.textContent='❌';rej.title='Tolak';rej.className='rej';rej.style.cssText='padding:6px 10px';
+      rej.onclick=async()=>{await jfetch(API+'?m=set&name='+encodeURIComponent(a.name)+'&status=rejected');refresh()};
+      td.append(ok,rej);
+    }
+    tb.append(tr);
+  });
+}
+function renderWarga(list){
+  const tb=$('#wargaTb');tb.innerHTML='';
+  list.slice().reverse().slice(0,20).forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+(list.length-i)+'</td><td class="u">@'+r.name+'</td><td>'+(r.nick||'')+'</td><td>'+r.day+'</td><td>'+sw(r.roof)+'</td><td>'+sw(r.wall)+'</td>';
+    tb.append(tr);
+  });
+  if(!list.length)tb.innerHTML='<tr><td colspan="6" class="empty">Belum ada warga.</td></tr>';
+}
+$('#btnRefresh').onclick=refresh;
+$('#btnScrape').onclick=async()=>{const m=$('#antriMsg');m.className='msg';m.textContent='Scraping… (butuh IG_TOKEN di server)';
+  const d=await jfetch(API+'?m=scrape');if(d.ok){m.className='msg ok';m.textContent=d.msg}else{m.className='msg err';m.textContent=d.error||'gagal'}
+  refresh()};
+$('#btnApply').onclick=async()=>{const m=$('#antriMsg');m.className='msg';m.textContent='Applying…';
+  const d=await jfetch(API+'?m=apply');if(d.ok){m.className='msg ok';m.textContent=d.msg}else{m.className='msg err';m.textContent=d.error||'gagal'}
+  refresh()};
+refresh();
+setInterval(refresh,30000);
+</script>
+</body>
+</html>

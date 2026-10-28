@@ -190,9 +190,28 @@ def next_slot(state):
     return 44 + (len(used) % 10), 44 + (len(used) // 10)
 
 
+ANTRIAN = os.path.join(ROOT, "scripts", "antrian.json")
+
+
+def load_antrian():
+    if os.path.exists(ANTRIAN):
+        with open(ANTRIAN) as f:
+            return json.load(f)
+    return []
+
+
+def save_antrian(a):
+    os.makedirs(os.path.dirname(ANTRIAN), exist_ok=True)
+    with open(ANTRIAN, "w") as f:
+        json.dump(a, f, ensure_ascii=False, indent=2)
+
+
 def main():
     dry = "--dry-run" in sys.argv
     no_push = "--no-push" in sys.argv
+    mode_antrian = "--antrian" in sys.argv
+    mode_apply = "--apply" in sys.argv
+
     token = os.environ.get("IG_TOKEN", "").strip()
     if not token:
         log("ERROR: IG_TOKEN belum di-set. Export dulu: export IG_TOKEN=IGAA...")
@@ -203,6 +222,79 @@ def main():
         log("ERROR: scripts/state.json belum ada. Jalankan generate_data.py --reset dulu.")
         sys.exit(1)
 
+    # MODE ANTRIAN: scrape -> simpan ke antrian.json (tanpa ubah state)
+    if mode_antrian:
+        log("Mengambil komentar -> antrian.json ...")
+        rows = fetch_comments(token)
+        log(f"  {len(rows)} komentar/balasan diambil")
+        warga = parse_warga(rows)
+        existing = {r["name"].lower() for r in state.get("residents", [])}
+        antrian = load_antrian()
+        seen = {a["name"].lower() for a in antrian}
+        baru = 0
+        for w in warga:
+            if w["name"].lower() in existing or w["name"].lower() in seen:
+                continue
+            antrian.append({
+                "name": w["name"], "nick": w["nick"],
+                "roof": w["roof"], "wall": w["wall"],
+                "teks": w.get("teks", ""), "at": datetime.now(WIB).isoformat(),
+                "status": "pending",
+            })
+            seen.add(w["name"].lower())
+            baru += 1
+        save_antrian(antrian)
+        log(f"  +{baru} antrian baru (total antrian: {len(antrian)})")
+        log("Selesai (antrian.json). Review di dashboard, lalu jalankan --apply.")
+        return
+
+    # MODE APPLY: ambil antrian ber-status 'approved' -> masuk state -> push
+    if mode_apply:
+        antrian = load_antrian()
+        approved = [a for a in antrian if a.get("status") == "approved"]
+        if not approved:
+            log("Tidak ada antrian ber-status approved. Setujui dulu di dashboard/antrian.json.")
+            return
+        existing = {r["name"].lower() for r in state.get("residents", [])}
+        day = state.get("day", 1)
+        added = 0
+        for a in approved:
+            if a["name"].lower() in existing:
+                continue
+            x, y = next_slot(state)
+            state["residents"].append({
+                "name": a["name"], "x": x, "y": y, "day": day,
+                "nick": a["nick"], "roof": a["roof"], "wall": a["wall"],
+            })
+            existing.add(a["name"].lower())
+            added += 1
+        # tandai approved -> applied, hapus rejected
+        state["day"] += 1
+        state["updated"] = datetime.now(WIB).strftime("%Y-%m-%d")
+        save_state(state)
+        # bersihkan antrian yang sudah diproses
+        antrian = [a for a in antrian if a.get("status") == "pending"]
+        save_antrian(antrian)
+        log(f"  +{added} warga di-apply (hari -> {state['day']})")
+
+        js = "window.NK_DATA = " + json.dumps(state, ensure_ascii=False, indent=1) + ";"
+        with open(OUT, "w") as f:
+            f.write(js)
+        log(f"  data.js ditulis ({os.path.getsize(OUT)} bytes)")
+
+        if not no_push:
+            branch = os.environ.get("GH_BRANCH", "main")
+            subprocess.run(["git", "-C", ROOT, "add", "data.js"], check=True)
+            r = subprocess.run(["git", "-C", ROOT, "commit", "-m", f"Hari ke-{state['day']}: +{added} warga baru"], capture_output=True, text=True)
+            if r.returncode == 0:
+                subprocess.run(["git", "-C", ROOT, "push", "origin", branch], check=True)
+                log(f"  pushed ke {branch}")
+            else:
+                log("  (tidak ada perubahan untuk di-commit)")
+        log("Selesai (apply).")
+        return
+
+    # MODE DEFAULT: scrape -> langsung apply (tanpa antrian)
     log("Mengambil komentar...")
     rows = fetch_comments(token)
     log(f"  {len(rows)} komentar/balasan diambil")
@@ -232,11 +324,10 @@ def main():
 
     state["day"] += 1
     state["updated"] = datetime.now(WIB).strftime("%Y-%m-%d")
-    state["followers"] = state.get("followers", 1)  # diupdate manual / via api/followers.js
+    state["followers"] = state.get("followers", 1)
     save_state(state)
     log(f"  +{added} warga ditambahkan (hari -> {state['day']})")
 
-    # generate data.js
     js = "window.NK_DATA = " + json.dumps(state, ensure_ascii=False, indent=1) + ";"
     with open(OUT, "w") as f:
         f.write(js)
@@ -246,9 +337,8 @@ def main():
         log("--no-push: selesai tanpa push.")
         return
 
-    # git commit + push
     branch = os.environ.get("GH_BRANCH", "main")
-    subprocess.run(["git", "-C", ROOT, "add", "data.js", "scripts/state.json"], check=True)
+    subprocess.run(["git", "-C", ROOT, "add", "data.js"], check=True)
     r = subprocess.run(["git", "-C", ROOT, "commit", "-m", f"Hari ke-{state['day']}: +{added} warga baru"], capture_output=True, text=True)
     if r.returncode == 0:
         subprocess.run(["git", "-C", ROOT, "push", "origin", branch], check=True)
