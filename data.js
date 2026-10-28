@@ -2,7 +2,7 @@ window.NK_DATA = {
  "version": 1,
  "account": "dusunkita.id",
  "day": 1,
- "updated": "2026-10-28",
+ "updated": "2026-10-29",
  "kavling": 50,
  "followers": 1,
  "target": 1000,
