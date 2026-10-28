@@ -385,6 +385,11 @@ export default async function handler(req, res) {
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({ n: N, tamu: +hr || 0, buku: (log || []).map(jparse).filter(Boolean), sudah: sudah || null });
     }
+    if (aksi === 'harta-info' && req.method === 'GET') { // 🔍 status peti hari ini + Pemburu Harta pekan ini (publik)
+      const D0 = await dataKampung(req);
+      res.setHeader('Cache-Control', 's-maxage=8, stale-while-revalidate=20');
+      return res.status(200).json(await hartaInfo(D0));
+    }
     if (req.method !== 'POST' && aksi !== 'saya') return res.status(405).json({ error: 'Metode tidak didukung' });
     const D = await dataKampung(req);
 
@@ -873,11 +878,6 @@ export default async function handler(req, res) {
       if (body.hapus) await kv(['LREM', 'trk:tanpakode', 1, String(body.hapus)]);
       const [L, last] = await kvMany([['LRANGE', 'trk:tanpakode', 0, 49], ['GET', 'trk:terakhir']]);
       return res.status(200).json({ list: (L || []).map(x => ({ raw: x, ...(jparse(x) || {}) })), terakhir: jparse(last) });
-    }
-    if (aksi === 'harta-info' && req.method === 'GET') {
-      const D0 = await dataKampung(req);
-      res.setHeader('Cache-Control', 's-maxage=8, stale-while-revalidate=20');
-      return res.status(200).json(await hartaInfo(D0));
     }
     if (aksi === 'harta') {
       const now = Date.now(), tgl = tglH(now), o = hartaJadwal(D, tgl).find(x => x.k === String(body.k || ''));
