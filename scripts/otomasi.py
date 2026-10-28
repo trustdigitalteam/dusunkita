@@ -52,10 +52,11 @@ def get_json(url):
         return json.loads(r.read().decode())
 
 
-def api(path, params, token):
+def fb(url, params, token):
+    """GET Facebook Graph API (bukan graph.instagram.com)."""
     q = dict(params)
     q["access_token"] = token
-    return get_json(G + path + "?" + urlencode(q))
+    return get_json("https://graph.facebook.com/v21.0/" + url + "?" + urlencode(q))
 
 
 def load_state():
@@ -72,28 +73,64 @@ def save_state(s):
 
 
 def fetch_comments(token, limit=5, max_pages=10):
-    """Ambil komentar dari N postingan terbaru (top-level + balasan)."""
-    media = api("me/media", {"fields": "id,caption,timestamp,comments_count", "limit": limit}, token)
+    """Ambil komentar dari N postingan terbaru akun IG business.
+
+    token = page access token (dari /me/accounts), yang sudah bisa akses
+    instagram_business_account + instagram_manage_comments.
+    """
+    # 1. cari IG business account yang terhubung ke page (pilih yang punya media)
+    pages = fb("me/accounts", {"fields": "id,name,access_token", "limit": 100}, token)
+    page_token = token
+    ig_id = None
+    best = None  # (media_count, ig_id, page_token)
+    for p in pages.get("data", []):
+        try:
+            r = fb(p["id"], {"fields": "instagram_business_account{id,username,media_count}"}, p.get("access_token", token))
+            iba = r.get("instagram_business_account")
+            if iba and iba.get("id"):
+                mc = int(iba.get("media_count") or 0)
+                if best is None or mc > best[0]:
+                    best = (mc, iba["id"], p.get("access_token", token))
+        except Exception:
+            continue
+    if not best:
+        log("ERROR: tidak ada IG business account terhubung ke page. Link dulu @dusunkita.id ke FB Page.")
+        return []
+    ig_id, page_token = best[1], best[2]
+    log(f"  pakai IG business account {ig_id}")
+
+    # 2. ambil media terbaru
+    media = fb(f"{ig_id}/media", {
+        "fields": "id,caption,timestamp,comments_count", "limit": limit
+    }, page_token)
+
     rows = []
+    fields = "id,text,timestamp,like_count,username,from{username},replies{id,text,timestamp,like_count,username,from{username}}"
     for m in media.get("data", []):
         mid = m["id"]
-        url = G + f"{mid}/comments?fields=id,text,timestamp,like_count,username,from,replies{{id,text,timestamp,like_count,username,from}}&limit=50&access_token={urlencode({'access_token': token})['access_token']}"
-        # graph api pakai akses token via query
-        url = G + f"{mid}/comments?fields=id,text,timestamp,like_count,username,from,replies{{id,text,timestamp,like_count,username,from}}&limit=50&access_token={token}"
-        pages = 0
-        while url and pages < max_pages:
-            j = get_json(url)
+        url = f"{mid}/comments"
+        pages_done = 0
+        after = None
+        while pages_done < max_pages:
+            params = {"fields": fields, "limit": 50}
+            if after:
+                params["after"] = after
+            j = fb(url, params, page_token)
             for c in j.get("data", []):
-                u = (c.get("from") or {}).get("username") or c.get("username", "")
+                u = ((c.get("from") or {}).get("username")) or c.get("username", "")
                 rows.append({"t": c.get("timestamp"), "u": u, "x": c.get("text", ""), "l": c.get("like_count", 0), "rep": False})
                 rp = c.get("replies")
                 while rp:
                     for r in rp.get("data", []):
-                        ru = (r.get("from") or {}).get("username") or r.get("username", "")
+                        ru = ((r.get("from") or {}).get("username")) or r.get("username", "")
                         rows.append({"t": r.get("timestamp"), "u": ru, "x": r.get("text", ""), "l": r.get("like_count", 0), "rep": True})
                     rp = rp.get("paging", {}).get("next") and get_json(rp["paging"]["next"])
-            url = j.get("paging", {}).get("next")
-            pages += 1
+            nxt = j.get("paging", {}).get("cursors", {}).get("after")
+            if not nxt:
+                break
+            after = nxt
+            pages_done += 1
+
     rows.sort(key=lambda r: r.get("t") or "")
     return rows
 
