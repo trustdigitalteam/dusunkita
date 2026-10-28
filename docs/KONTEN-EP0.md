@@ -135,8 +135,9 @@ Jadi warga pertama. Komen sekarang 👇
 - **FPS**: 30
 
 ### Waktu Posting
-- **19:00 WIB** (sesuai jadwal cron)
-- Setelah posting, cron 19:30 otomatis scrape komen
+- **16:00 WIB** (posting reels)
+- 15:30 WIB → cron auto-konten generate brief episode
+- Setelah posting, cron 19:00 otomatis scrape komen
 
 ---
 

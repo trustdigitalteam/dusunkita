@@ -52,7 +52,8 @@ Grep `index.html` + `manifest.json` + `data.js`:
 cron 18:50 → scrape komen IG (ambil-komen.html / API)
           → parse nama+warna → generate data.js
           → git commit data.js → push → Vercel auto-deploy
-cron 19:00 → posting episode Reels (otomasi)
+cron 15:30 → generate brief episode Reels (otomasi)
+16:00 → posting episode Reels (manual)
 cron 24:00 → notif rekap Telegram
 ```
 

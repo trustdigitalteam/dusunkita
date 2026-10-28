@@ -165,6 +165,9 @@ Jadi warga pertama. Komen sekarang 👇
 
 ## Waktu Posting
 
-**19:00 WIB** — setelah posting, cron otomatis:
-- 19:30 → scrape komen IG
+**16:00 WIB** — posting reels
+
+Sebelumnya 15:30 WIB — cron auto-konten generate brief episode
+Setelah posting, cron otomatis:
+- 19:00 → scrape komen IG
 - 19:40 → apply warga approved → web live update

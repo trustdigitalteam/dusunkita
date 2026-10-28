@@ -28,7 +28,7 @@ Gabungan 2 referensi: **Negeri Komen** (akuisisi murah, komen = rumah) × **Alph
 
 ## Loop Harian
 ```
-19:00  Episode "Hari ke-N" (IG Reels)
+16:00  Posting Episode "Hari ke-N" (IG Reels)
 19:00-24:00  Live (YouTube) — kampung berubah real-time
 sepanjang hari  Web (SPA) — cek rumah, kerja, upgrade, peta
 ```

@@ -52,7 +52,7 @@
 | 6 | 3 Nov | Pasar Dusun (Kejutan 🧺) | EP6 "Pasar Dusun buka" |
 | 7 | 4 Nov | Loker pertama dibuka (set `loker[]`) | EP7 "Loker pertama" |
 
-**Auto tiap hari:** cron 19:30 scrape → approve di dashboard → cron 19:40 apply → web live.
+**Auto tiap hari:** 16:00 posting reels → cron 19:00 scrape → approve di dashboard → cron 19:40 apply → web live.
 **Auto harta:** 2–3 peti/hari (HMAC), max 3x/pekan per warga.
 
 ### FASE 2 — Minggu 2: Ekonomi Mulai (5 Nov – 11 Nov)
@@ -135,8 +135,9 @@ Set di `state.json` → `goalKampung: {judul, target, awal}` → generate_data �
 ## Alur Tiap Hari (10 menit)
 
 ```
-19:00  Posting reels + screenshot footage (5 mnt)
-19:30  Cron scrape → cek dashboard → approve (2 mnt)
+15:30  Cron auto-konten → brief episode
+16:00  Posting reels + screenshot footage (5 mnt)
+19:00  Cron scrape → cek dashboard → approve (2 mnt)
 19:40  Cron apply → web live auto
 MALAM  Set quest/loker/voucher (kalau ada event) → deploy (3 mnt)
 ```
