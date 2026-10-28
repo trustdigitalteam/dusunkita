@@ -3,7 +3,7 @@
 ## Struktur Repo (base = befthr/negerikomen)
 
 ```
-negerikita/
+dusunkita/
 ├─ index.html (703KB)   SPA peta kampung (React/Vite build)
 ├─ data.js (280KB)      database kampung (JSON statis, diganti tiap hari)
 ├─ konsol.js (59KB)     14 mini game arcade

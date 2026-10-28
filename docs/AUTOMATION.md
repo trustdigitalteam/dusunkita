@@ -49,7 +49,7 @@ python3 scripts/otomasi.py             # full: scrape + generate + push
 ### 5. Cron (Hermes)
 ```
 schedule: 30 19 * * *
-script: bash /root/negerikita/scripts/cron.sh
+script: bash /root/dusunkita/scripts/cron.sh
 ```
 
 ## Catatan
