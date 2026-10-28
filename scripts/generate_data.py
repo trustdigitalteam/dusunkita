@@ -34,17 +34,12 @@ BASE = {
     "gento": True,
     "gentoMain": True,
     "live": {"url": "", "label": "", "jadwal": ""},
-    "gaji": {"default": 2, "warung": 2, "ronda": 2, "bakso": 2, "padang": 2, "marbot": 2, "kerja bakti": 2},
+    "gaji": {"default": 2, "warung": 2, "satpam": 2, "bakso": 2, "padang": 2, "marbot": 2, "proyek": 2},
     "loker": [],
     "lowongan": {"url": ""},
     "dusun": [],
     "residents": [],
-    "buildings": [
-        {"type":"posronda","name":"Pos Ronda","by":"dusunkita.id","day":1,"x":44,"y":46,"w":1},
-        {"type":"warung","name":"Warung Pak RT","by":"dusunkita.id","day":1,"x":46,"y":44,"w":1},
-        {"type":"tugu","name":"Pohon Beringin Tua","by":"dusunkita.id","day":1,"x":45,"y":45,"w":1},
-        {"type":"taman","name":"Alun-Alun Dusun","by":"dusunkita.id","day":1,"x":47,"y":47,"w":1}
-    ],
+    "buildings": [],
     "awards": [],
     "juraganHistory": [],
 }
