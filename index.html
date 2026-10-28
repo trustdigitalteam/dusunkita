@@ -1171,7 +1171,7 @@ function drawBuilding(b,s,a){
   }else if(t==='tb'){ // toko bangunan: gudang beratap seng + tumpukan bata, bata, sak semen, kaleng cat
     ctx.fillStyle='#D8CCB4';ctx.fillRect(X+6,Y+6,Z-12,Z-12);
     box(X+14,Y+12,92,38,'#F3E8D2','#8A7A60');ctx.fillStyle='#2F74B5';ctx.fillRect(X+10,Y+8,100,12);ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=1;for(let k=X+14;k<X+110;k+=6){ctx.beginPath();ctx.moveTo(k,Y+8);ctx.lineTo(k,Y+20);ctx.stroke()}
-    ctx.fillStyle='#1C2520';ctx.fillRect(X+12,Y+51,96,11);ctx.strokeStyle='#F2C230';ctx.lineWidth=1;ctx.strokeRect(X+13,Y+52,94,9);{const tx='TB BATA JAYA JAYA JOSS';let f=7.5;ctx.textAlign='center';ctx.textBaseline='middle';do{ctx.font=`800 ${f}px sans-serif`;f-=.25}while(ctx.measureText(tx).width>88&&f>4);ctx.fillStyle='#F2C230';ctx.fillText(tx,X+60,Y+56.8)}
+    ctx.fillStyle='#1C2520';ctx.fillRect(X+12,Y+51,96,11);ctx.strokeStyle='#F2C230';ctx.lineWidth=1;ctx.strokeRect(X+13,Y+52,94,9);{const tx='TB SINAR BATA';let f=7.5;ctx.textAlign='center';ctx.textBaseline='middle';do{ctx.font=`800 ${f}px sans-serif`;f-=.25}while(ctx.measureText(tx).width>88&&f>4);ctx.fillStyle='#F2C230';ctx.fillText(tx,X+60,Y+56.8)}
     const bata=(x,y)=>{for(let r2=0;r2<3;r2++)for(let c2=0;c2<4;c2++){ctx.fillStyle=(r2+c2)%2?'#B5532E':'#C4643A';ctx.fillRect(x+c2*7+(r2%2?3:0),y+r2*4,6.4,3.4)}};
     bata(X+14,Y+70);bata(X+14,Y+86);
     for(let k=0;k<4;k++){ctx.fillStyle=k%2?'#A8432A':'#C4502F';ctx.beginPath();ctx.ellipse(X+56,Y+72+k*5,10,3,0,0,7);ctx.fill()} // tumpukan bata
@@ -1799,8 +1799,8 @@ const KERJA_IC={penginapan:'🏨',sekolah:'🏫',puskesmas:'🏥',tk:'🧸'};
 const bKey=b=>b.type+'@'+b.x+','+b.y;
 function hitungKerja(){RES.forEach(r=>{delete r.kerja});const add=(b,x)=>{if(!x||!x.user||(x.until&&x.until<NK.wibToday()))return;const r=RES.find(q=>q.name===x.user);if(r&&!r.kerja){const ik=KERJA_IK[b.type]||[KERJA_IC[b.type]||'👷',String(x.role||'KARYAWAN').toUpperCase()];r.kerja={role:x.role||'Karyawan',bn:b.name,ic:ik[0],papan:ik[1],prop:b.type,until:x.until||''}}};BLD.forEach(b=>(Array.isArray(b.staff)?b.staff:[]).forEach(x=>add(b,x)));
   // karyawan bangunan dusun baru (bukan di BLD), contoh di data.js: "karyawanDesa":[{"type":"rental","user":"namaig","role":"Penjaga Rental","until":"2026-11-27"}]
-  (Array.isArray(D.karyawanDesa)?D.karyawanDesa:[]).forEach(x=>x&&add({type:x.type,name:x.type==='rental'?'Playstation Kita':(x.tempat||'')},x))}
-// item pekarangan yang tampil: Penjaga Rental otomatis dapat konsol Playstation Kita di halaman (selama kontrak)
+  (Array.isArray(D.karyawanDesa)?D.karyawanDesa:[]).forEach(x=>x&&add({type:x.type,name:x.type==='rental'?'Konsel Kita':(x.tempat||'')},x))}
+// item pekarangan yang tampil: Penjaga Rental otomatis dapat konsol Konsel Kita di halaman (selama kontrak)
 window.itemsPek=itemsPek;function itemsPek(r){const it=Array.isArray(r.items)?r.items:[];return r.kerja&&r.kerja.prop==='rental'&&!it.some(o=>o.id==='konsol')&&it.length<3?[...it,{id:'konsol'}]:it}
 hitungKerja();
 // karyawan yang diatur sendiri oleh pemilik bangunan (dari database) digabung ke data kampung
@@ -1820,7 +1820,7 @@ $('tagDay').textContent=`Hari ke-${D.day}`;
 $('tagWarga').textContent=`${fmt(RES.length+1)} warga`;
 $('sDay').textContent=D.day;$('sWarga').textContent=fmt(RES.length+1);$('sFree').title='Kavling selalu ada: tiap warga baru pasti dapat rumah';$('sBld').textContent=fmt(BLD.length);
 const NAMA_DESA='Dusun Kita Sejahtera';const NAMA_DESA_LAMA='Dusun Awal Kita'; // desa pertama (kampung lama)
-const NAMA_DESA_OLEH='alifrmnxhrn'; // usulan @alifrmnxhrn, like terbanyak (43) di komen Hari 6
+const NAMA_DESA_OLEH='dusunkita.id'; // usulan Pak RT, ditetapkan di Hari 1
 function showGoal(){if(!(Number.isFinite(D.followers)&&D.target))return;
   const GOALS=[{n:D.target},{n:3000,label:'Desa Baru'}];const G=GOALS.find(g=>D.followers<g.n)||GOALS[GOALS.length-1];const tgt=G.n;
   $('goal').querySelector('h3').textContent=G.label?`Target follower · 🏘️ ${D.followers>=G.n?NAMA_DESA:G.label}`:'Target follower';
@@ -1974,7 +1974,7 @@ const KEJUTAN=[
   {d:'2026-10-29',ic:'🏘️',q:'Hari pertama Dusun Kita dibuka…',n:'Pendaftaran Warga',buka:false},
   {d:'2026-10-30',ic:'🔍',q:'Pak RT sembunyikan sesuatu di peta…',n:'Harta Karun Harian'},
   {d:'2026-10-31',ic:'🏆',q:'Voting warga terbaik pekan pertama…',n:'Tetangga Idaman'},
-  {d:'2026-11-01',ic:'📺',q:'Ada yang mau siaran dari dusun…',n:'TV Komen Nasional'},
+  {d:'2026-11-01',ic:'📺',q:'Ada yang mau siaran dari dusun…',n:'TV Dusun Kita'},
   {d:'2026-11-02',ic:'🎈',q:'Lihat ke langit malam nanti…',n:'Balon Bata'},
   {d:'2026-11-03',ic:'🧺',q:'Kampung bakal makin rame…',n:'Pasar Dusun'}];
 function renderKejutan(){const box=$('kjtList');if(!box)return;box.innerHTML='';
@@ -1995,7 +1995,7 @@ try{renderKejutan();setInterval(()=>{try{renderKejutan()}catch(_){}},6e4)}catch(
 function renderKaryawan(){const box=$('kryList');if(!box)return;const BL={jan:0};const bln=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const tgl=d=>{const [y,m,dd]=String(d).split('-').map(Number);return dd+' '+bln[m-1]};const ic={posronda:'🔦',warung:'🏪',masjid:'🕌',penginapan:'🏨',sekolah:'🏫',puskesmas:'🏥',tk:'🧸'};
   const L=[];BLD.forEach(b=>staffOf(b).forEach(x=>L.push({u:x.user,role:x.role||'Karyawan',tempat:b.name||'',ic:ic[b.type]||'👷',until:x.until})));
-  (Array.isArray(D.karyawanDesa)?D.karyawanDesa:[]).forEach(x=>{if(x&&x.user&&!(x.until&&x.until<NK.wibToday()))L.push({u:x.user,role:x.role||'Karyawan',tempat:x.type==='rental'?'Rental Playstation Kita':(x.tempat||''),ic:x.type==='rental'?'🎮':'👷',until:x.until})});
+  (Array.isArray(D.karyawanDesa)?D.karyawanDesa:[]).forEach(x=>{if(x&&x.user&&!(x.until&&x.until<NK.wibToday()))L.push({u:x.user,role:x.role||'Karyawan',tempat:x.type==='rental'?'Rental Konsel Kita':(x.tempat||''),ic:x.type==='rental'?'🎮':'👷',until:x.until})});
   box.innerHTML='';if(!L.length){$('kryCard').hidden=true;return}$('kryCard').hidden=false;
   // tab per tempat kerja: Semua + tiap bangunan
   let tb=$('kryTabs');if(!tb){tb=el('div','jtabs');tb.id='kryTabs';box.before(tb)}tb.innerHTML='';
@@ -2017,7 +2017,7 @@ function renderEksklusif(){const box=$('eksList');if(!box)return;box.innerHTML='
   EKS_DAF.forEach(([id,ic,nm,ow])=>{const o=ow(),li=document.createElement('li'),bt=document.createElement('button');bt.type='button';
     bt.append(el('span','ico',ic),el('b',null,nm+(o?' · 👑 @'+o:'')),el('span',null,o?'💎 Pemilik Eksklusif · sejak '+robotSejak(id):'Belum ada pemilik · '+KK_ITEM[id].h+' Receh · siapa cepat dia dapat!'));
     bt.onclick=()=>{id==='robot'?openDemoGento():id==='naga'?openDemoNaga():id==='sorot'?openDemoSorot():openDemoPatromax()};bt.append(el('span',null,'👀 Ketuk buat lihat 3D'));li.append(bt);box.append(li)});$('eksCard').hidden=false}
-function renderBelanjaFeed(){const box=$('okbList');if(!box)return;const KD={motor:'🛵 Motor',sepeda:'🚲 Sepeda',robot:'🤖 GENTO',patromax:'🏮 Patromax',sorot:'🔦 Lampu Sorot Langit',naga:'🐉 NAGASARI',konsol:'🎮 Playstation Kita 1.0'};
+function renderBelanjaFeed(){const box=$('okbList');if(!box)return;const KD={motor:'🛵 Motor',sepeda:'🚲 Sepeda',robot:'🤖 GENTO',patromax:'🏮 Patromax',sorot:'🔦 Lampu Sorot Langit',naga:'🐉 NAGASARI',konsol:'🎮 Konsel Kita 1.0'};
   const lalu=t=>{const d=Math.round((Date.now()-t)/1000);return d<60?'baru saja':d<3600?Math.round(d/60)+' menit lalu':d<86400?Math.round(d/3600)+' jam lalu':Math.round(d/86400)+' hari lalu'};
   const L=(window.BELANJA||[]).map(o=>{let t='';if(o.j==='warna')t='🎨 Ganti warna rumah';else if(o.j==='emas')t='🚩 Bendera emas';else if(o.j==='ruko')t='🏪 Buka ruko';else if(o.j==='tingkat')t='🏢 Rumah tingkat '+(o.l||2);
     else if(o.j==='item'){const v=(o.it||[]).map(id=>KD[id]||(KK_ITEM[id]?'🛍️ '+KK_ITEM[id].n:'')).filter(Boolean);if(v.length)t=v.join(', ')}
@@ -2059,7 +2059,7 @@ BLD.length&&$('bList').querySelectorAll('li').forEach(li=>li.dataset.desa='lama'
  const nRental=(Array.isArray(D.karyawanDesa)?D.karyawanDesa:[]).filter(x=>x&&x.type==='rental'&&!(x.until&&x.until<NK.wibToday())).length;
  const BARU=[
   {ic:'⚽',nm:'Lapangan Dusun',meta:'👑 Pak RT · ⚽ Liga Gang',go:()=>{bukaStadion()}},
-  {ic:'🎮',nm:'Rental Playstation Kita',meta:'👑 Pak RT · '+nRental+' karyawan',go:ke(()=>{const q=DESA.RT;return {x:q.x+q.w/2,y:q.y+q.h/2}})},
+  {ic:'🎮',nm:'Rental Konsel Kita',meta:'👑 Pak RT · '+nRental+' karyawan',go:ke(()=>{const q=DESA.RT;return {x:q.x+q.w/2,y:q.y+q.h/2}})},
   {ic:'🤖',nm:'Hanggar GENTO',meta:'🤖 Rumah robot GENTO',go:ke(()=>{const g=DESA.GM;return {x:g.x+g.w/2,y:g.y+g.h/2}})}];
  const L=$('bList');BARU.slice().reverse().forEach(f=>{const li=document.createElement('li'),bt=document.createElement('button');bt.type='button';li.dataset.desa='baru';li.dataset.q=(f.nm+' '+f.meta+' '+NAMA_DESA).toLowerCase();
    bt.append(el('span','ico',f.ic),el('b',null,f.nm),el('span',null,f.meta+' · 📍 '+NAMA_DESA));bt.onclick=f.go;li.append(bt);L.prepend(li)});
@@ -2642,7 +2642,7 @@ function rental3D(g){const T=THREE;g.children.forEach((m,i)=>{if(i===0)m.scale.s
   box(3.4,1.3,.06,'#9ED8FF',0,1.25,1.22,{emissive:'#3A6E8F',emissiveIntensity:.35,transparent:true,opacity:.85});
   for(let i=0;i<3;i++){box(.7,.45,.06,'#1C2520',-1.05+i*1.05,1.45,1.0);const sc=box(.6,.36,.02,'#7FD8FF',-1.05+i*1.05,1.45,1.04,{emissive:'#7FD8FF',emissiveIntensity:.9});(g.userData.anim||(g.userData.anim=[])).push(t=>{sc.material.emissiveIntensity=.5+.45*Math.sin(t*.005+i*2)})}
   box(1.2,1.1,.06,'#5B3A22',0,.55,1.24);
-  const cv=document.createElement('canvas');cv.width=768;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#1C2520';c.fillRect(0,0,768,128);c.fillStyle='#FF5E8A';c.font='800 58px Poppins,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('🎮 RENTAL Playstation Kita',384,66);
+  const cv=document.createElement('canvas');cv.width=768;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#1C2520';c.fillRect(0,0,768,128);c.fillStyle='#FF5E8A';c.font='800 58px Poppins,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('🎮 RENTAL Konsel Kita',384,66);
   const sg=new T.Mesh(new T.PlaneGeometry(4.4,.74),new T.MeshBasicMaterial({map:new T.CanvasTexture(cv)}));sg.position.set(0,3.35,1.25);H.add(sg);box(4.5,.8,.08,'#1C2520',0,3.35,1.2);
   ['#E07A3E','#8E5AA8','#2F9E6A','#3E8FC9'].forEach((col,i)=>{const x=-1.5+i*1,z=2.3;box(.34,.5,.24,col,x,.45,z);const kp=new T.Mesh(new T.SphereGeometry(.16,12,10),M('#F1C9A0'));kp.position.set(x,.88,z);kp.castShadow=true;H.add(kp);box(.32,.12,.06,'#2B2F5E',x,.55,z+.16)})}
 function rumahGento3D(g){const T=THREE;g.children.forEach((m,i)=>{if(i===0){m.scale.set(7.4,1,7.4)}else m.visible=false});const H=new T.Group();H.position.set(19,0,14);H.rotation.y=.4;g.add(H);
@@ -3201,7 +3201,7 @@ function build3DB(b){const T=THREE,g=new T.Group();
     items3D(g,{items:[{id:'ayam'},{id:'kucing'},{id:'lampu'}]});
   }else if(ty==='tb'){
     box(3.6,.04,1.8,'#C9B48A',0,.02,2.2);box(3.3,1.9,2.4,'#F3E8D2',0,.95,-.2);box(3.5,.18,2.7,'#2F74B5',0,1.98,-.2);
-    box(1.4,1.4,.06,'#6B4527',0,.7,1.01);sign(b.name||'TB BATA JAYA JAYA JOSS','#1C2520','#F2C230',3.2,.45,0,1.75,1.03);
+    box(1.4,1.4,.06,'#6B4527',0,.7,1.01);sign(b.name||'TB SINAR BATA','#1C2520','#F2C230',3.2,.45,0,1.75,1.03);
     for(let r2=0;r2<3;r2++)for(let c2=0;c2<4;c2++)box(.3,.14,.16,(r2+c2)%2?'#B5532E':'#C4643A',-1.5+c2*.32+(r2%2?.15:0),.07+r2*.15,2.1); // bata
     for(let k=0;k<4;k++)box(.6,.06,.35,k%2?'#A8432A':'#C4502F',-.2,.05+k*.08,2.3); // bata
     [[.6,2.1],[.95,2.2],[.75,2.45]].forEach(([x,z],k)=>box(.32,.18,.24,'#E8E2D2',x,.09+(k===2?.18:0),z)); // sak semen
@@ -3620,7 +3620,7 @@ const w=el('div','kk-admin');w.append(el('b',null,'👑 Pak RT: bantu warga'),el
       const res=await kkApi('reset-jatah',{target:t},true);out.textContent=res.ok?`Jatah ganti @${res.u} sudah penuh lagi`:(res.error||'Gagal')}),out);body.append(w)}
 /* ---- Ubah rumah & item pekarangan (traktir Bata, dikonfirmasi Pak RT) ---- */
 const KK_ITEM={sepeda:{n:'Sepeda',h:2,k:'Kendaraan',d:'Parkir di teras, pilih warnanya'},motor:{n:'Motor',h:4,k:'Kendaraan',d:'Nangkring di teras, pilih warnanya'},ayam:{n:'Ayam',h:1,k:'Hewan',d:'Jago penjaga pekarangan'},kucing:{n:'Kucing',h:2,k:'Hewan',d:'Teman rebahan di halaman'},kambing:{n:'Kambing',h:2,k:'Hewan',d:'Embee… pekarangan jadi rame'},
-  lampu:{n:'Lampu taman',h:1,k:'Hiasan',d:'Pekarangan terang pas malam'},mangga:{n:'Pohon mangga',h:1,k:'Hiasan',d:'Pohon rindang, halaman adem'},kolam:{n:'Kolam ikan',h:2,k:'Hiasan',d:'Kolam ikan kecil di halaman'},ayunan:{n:'Ayunan',h:2,k:'Hiasan',d:'Buat santai sore-sore'},bougenville:{n:'Bougenville',h:2,k:'Hiasan',d:'Bunga pink lebat, rumah jadi cantik'},papan:{n:'Papan nama',h:2,k:'Papan nama',d:'Tulis nama rumahmu sendiri'},konsol:{n:'Playstation Kita 1.0',h:4,k:'Hiburan',d:'14 mini game + ranking, bisa dipajang di pekarangan',dl:'Konsol game kampung, bisa dipajang di pekarangan rumahmu (meja + TV mini, kelihatan tetangga 👀). Isinya 14 mini game seru: Adu Penalti, Tangkap Bata, Pancing Ikan, Racik Bakso, Kejar Ayam, Balap Karung, Layangan, Memori Bata, Panjat Pinang, Tebak Kentongan, Lompat Karet, Pesawat Nembak, Tarik Tambang & Egrang. Skor terbaikmu masuk 🏆 ranking! Mau coba dulu? Sewa 1 hari cuma 1 Receh di Kartu Komen.'},sorot:{n:'Lampu Sorot Langit',h:19,k:'Eksklusif',d:'Tiap malam, @username-mu terpampang di langit kampung!'},naga:{n:'NAGASARI (Naga Layangan)',h:25,k:'Eksklusif',d:'🐉 NAGASARI — ditunggangi Si Bata, bersama anak-anaknya Cilok, Cireng, Cimol. Terbang keliling kampung, malam menyala, sembur kembang api ke rumah warga 2x/jam!'},patromax:{n:'Patromax',h:12,k:'Eksklusif',d:'Lampu gede! Pas malam ±10 rumah di sekitarmu ikut terang.'},robot:{n:'GENTO',h:22,k:'Eksklusif',d:'Tingginya 3x rumah tingkat 3! Bawa pedang! Bisa jalan-jalan, terbang, tebas, tembak mercon, dan ganti pose di 3D.'}};
+  lampu:{n:'Lampu taman',h:1,k:'Hiasan',d:'Pekarangan terang pas malam'},mangga:{n:'Pohon mangga',h:1,k:'Hiasan',d:'Pohon rindang, halaman adem'},kolam:{n:'Kolam ikan',h:2,k:'Hiasan',d:'Kolam ikan kecil di halaman'},ayunan:{n:'Ayunan',h:2,k:'Hiasan',d:'Buat santai sore-sore'},bougenville:{n:'Bougenville',h:2,k:'Hiasan',d:'Bunga pink lebat, rumah jadi cantik'},papan:{n:'Papan nama',h:2,k:'Papan nama',d:'Tulis nama rumahmu sendiri'},konsol:{n:'Konsel Kita 1.0',h:4,k:'Hiburan',d:'14 mini game + ranking, bisa dipajang di pekarangan',dl:'Konsol game kampung, bisa dipajang di pekarangan rumahmu (meja + TV mini, kelihatan tetangga 👀). Isinya 14 mini game seru: Adu Penalti, Tangkap Bata, Pancing Ikan, Racik Bakso, Kejar Ayam, Balap Karung, Layangan, Memori Bata, Panjat Pinang, Tebak Kentongan, Lompat Karet, Pesawat Nembak, Tarik Tambang & Egrang. Skor terbaikmu masuk 🏆 ranking! Mau coba dulu? Sewa 1 hari cuma 1 Receh di Kartu Komen.'},sorot:{n:'Lampu Sorot Langit',h:19,k:'Eksklusif',d:'Tiap malam, @username-mu terpampang di langit kampung!'},naga:{n:'NAGASARI (Naga Layangan)',h:25,k:'Eksklusif',d:'🐉 NAGASARI — ditunggangi Si Bata, bersama anak-anaknya Cilok, Cireng, Cimol. Terbang keliling kampung, malam menyala, sembur kembang api ke rumah warga 2x/jam!'},patromax:{n:'Patromax',h:12,k:'Eksklusif',d:'Lampu gede! Pas malam ±10 rumah di sekitarmu ikut terang.'},robot:{n:'GENTO',h:22,k:'Eksklusif',d:'Tingginya 3x rumah tingkat 3! Bawa pedang! Bisa jalan-jalan, terbang, tebas, tembak mercon, dan ganti pose di 3D.'}};
 const KK_VW={merah:'#C4402F',biru:'#2F74B5',hijau:'#2F9E6A',kuning:'#F2C230',hitam:'#2B2B2B',putih:'#F4EFE3',pink:'#E58AA6',ungu:'#8E5AA8',oranye:'#E07A3E'};
 const KK_JENIS={warna:{ic:'🎨',n:'Ubah warna'},emas:{ic:'🚩',n:'Bendera emas'},ruko:{ic:'🏪',n:'Jadi ruko'},item:{ic:'🎁',n:'Item pekarangan'},tingkat:{ic:'🏢',n:'Rumah tingkat'}};
 // gambar item (tanpa wajah: hewan cukup bentuk & warna)
@@ -4182,10 +4182,10 @@ function kkJasaBox(body,c,i,punyaK,sw){const w=el('div','kk-jasa');w.append(el('
   if(pdhOn)row('🚁','Helikoper',(t.heli?`🎫 ${t.heli} tiket · `:'')+'ke kavling 💎 eksklusif · 3 mnt',rb(t.heli?'Pakai':'8 Receh',t.heli?'gold3':'',()=>bukaPindahan('heli')));
   if(jalan)w.append(el('p','kj-st',`📦 Rumahmu lagi diangkut · ⏳ ${pdhSisa(c.pindahKu,Date.now())} lagi`));
   const ks=kkItemSVG('konsol');
-  if(punyaK)row(ks,'Playstation Kita','14 mini game · punyamu selamanya',rb('🎮 Main','gold3',()=>{kkTutup();bukaKonsol(false)}));
-  else if(sw)row(ks,'Playstation Kita','Sewa aktif s/d '+new Date(c.sewaKonsol).toLocaleString('id-ID',{weekday:'short',hour:'2-digit',minute:'2-digit'}),rb('🎮 Main','gold3',()=>{kkTutup();bukaKonsol(false)}));
-  else row(ks,'Playstation Kita','14 mini game · sewa 1 hari',rb('1 Receh','',async e=>{const bt=e.currentTarget;if((c.saldo||0)<1){toast('Butuh 1 Receh. Isi Recehan dulu ya!');kkIsiSaldo(body,c);return}
-    if(!await kkYakin('Sewa Playstation Kita?','1 Receh untuk main 24 jam (14 mini game). Skor terbaikmu ikut ranking. Mau punya selamanya? Beli 4 Receh di Ubah rumah → Item.','Ya, sewa'))return;bt.disabled=true;const r2=await kkApi('sewa-konsol',{},true);bt.disabled=false;if(!r2.ok){toast(r2.error||'Gagal');return}try{SND.play('ting',.8)}catch(_){}toast('🎮 Sewa aktif 24 jam. Selamat main!');kkTampil(body,r2.kartu)}));
+  if(punyaK)row(ks,'Konsel Kita','14 mini game · punyamu selamanya',rb('🎮 Main','gold3',()=>{kkTutup();bukaKonsol(false)}));
+  else if(sw)row(ks,'Konsel Kita','Sewa aktif s/d '+new Date(c.sewaKonsol).toLocaleString('id-ID',{weekday:'short',hour:'2-digit',minute:'2-digit'}),rb('🎮 Main','gold3',()=>{kkTutup();bukaKonsol(false)}));
+  else row(ks,'Konsel Kita','14 mini game · sewa 1 hari',rb('1 Receh','',async e=>{const bt=e.currentTarget;if((c.saldo||0)<1){toast('Butuh 1 Receh. Isi Recehan dulu ya!');kkIsiSaldo(body,c);return}
+    if(!await kkYakin('Sewa Konsel Kita?','1 Receh untuk main 24 jam (14 mini game). Skor terbaikmu ikut ranking. Mau punya selamanya? Beli 4 Receh di Ubah rumah → Item.','Ya, sewa'))return;bt.disabled=true;const r2=await kkApi('sewa-konsol',{},true);bt.disabled=false;if(!r2.ok){toast(r2.error||'Gagal');return}try{SND.play('ting',.8)}catch(_){}toast('🎮 Sewa aktif 24 jam. Selamat main!');kkTampil(body,r2.kartu)}));
   body.append(w)}
 function kkPindahBox(body,c){const w=el('div','kk-kol');w.append(el('b',null,'🚚🚁 Jasa Pindahan'));const t=c.tiket||{};
   w.append(el('p','kk-muted',`🎫 Tiket Truk Titut: ${t.truk||0} · Helikoper: ${t.heli||0}`+(c.pindahJeda>0?` · ⏳ bisa pindah lagi ${pdhJeda(c.pindahJeda)} lagi`:'')));
@@ -4236,7 +4236,7 @@ function kkUbah(body,c,i,tab){body.innerHTML='';kkBack(body,kkKeKartu(body));bod
     body.append(g);if(k==='Kendaraan')body.append(vbox);if(k==='Papan nama')body.append(inp)});
   const lanjut=kkGBtn('Lanjut · ','0 Receh','gold3',async e=>{const bt=e.currentTarget;bt.disabled=true;const res=await kkApi('minta-ubah',{jenis:'item',items:[...pick],teks,warna:{motor:wk.motor,sepeda:wk.sepeda}},true);bt.disabled=false;
     if(!res.ok){msg.textContent=res.error||'Gagal';msg.className='kk-msg err';return}
-    if(res.langsung){try{SND.play('ting',.9)}catch(_){}toast(pick.has('konsol')?'🎮 Playstation Kita resmi jadi milikmu! Langsung main yuk 🎉':pick.has('patromax')?'🏮 Patromax resmi jadi milikmu! Tunggu malam, sekitar rumahmu bakal terang 🎉':pick.has('sorot')?'🔦 Lampu Sorot Langit jadi milikmu! Nanti malam namamu terpampang di langit kampung 🎉':pick.has('naga')?'🐉 NAGASARI resmi jadi milikmu! Si Bata udah naik, Cilok, Cireng, Cimol ikut terbang 🎉':'🤖 GENTO resmi jadi milikmu! Cek pekaranganmu 🎉');kkTampil(body,res.kartu);setTimeout(()=>location.reload(),1600);return}kkKode(body,res)});
+    if(res.langsung){try{SND.play('ting',.9)}catch(_){}toast(pick.has('konsol')?'🎮 Konsel Kita resmi jadi milikmu! Langsung main yuk 🎉':pick.has('patromax')?'🏮 Patromax resmi jadi milikmu! Tunggu malam, sekitar rumahmu bakal terang 🎉':pick.has('sorot')?'🔦 Lampu Sorot Langit jadi milikmu! Nanti malam namamu terpampang di langit kampung 🎉':pick.has('naga')?'🐉 NAGASARI resmi jadi milikmu! Si Bata udah naik, Cilok, Cireng, Cimol ikut terbang 🎉':'🤖 GENTO resmi jadi milikmu! Cek pekaranganmu 🎉');kkTampil(body,res.kartu);setTimeout(()=>location.reload(),1600);return}kkKode(body,res)});
   function upd(){const t=[...pick].reduce((s,id)=>s+KK_ITEM[id].h,0);lanjut.lastChild.textContent=t+' Receh';{const tn=[...lanjut.childNodes].find(n=>n.nodeType===3&&/·/.test(n.nodeValue));if(tn)tn.nodeValue=pick.has('robot')||pick.has('konsol')||pick.has('patromax')||pick.has('sorot')||pick.has('naga')?'Beli langsung · ':'Lanjut · '}lanjut.disabled=!t||(pick.has('papan')&&!teks.trim());
     foot.firstChild.textContent=pick.size?`${pick.size} item dipilih`:'Belum ada item dipilih';
     const pp=body.querySelector('.kk-it[data-id="papan"] svg');if(pp)pp.replaceWith(kkItemSVG('papan',teks.trim()||null))}
@@ -4255,7 +4255,7 @@ function kkTingkatSVG(r,n){const ns='http://www.w3.org/2000/svg',sv=document.cre
     [17,29,41].forEach((x,j)=>{if(k===0&&j===1)add('rect',{x:28,y:y+4,width:8,height:fh-4,fill:'#6B4527'});else add('rect',{x,y:y+3.5,width:6,height:6,fill:'#BFE3F2',stroke:'#1C2520','stroke-width':.8})})}
   add('polygon',{points:`7,${top} 32,${top-16} 57,${top}`,fill:Rf,stroke:'#1C2520','stroke-width':1.6,'stroke-linejoin':'round'});return sv}
 function kkTingkat(body,c,i){const r=RES[i],kini=c.tingkat||1;body.innerHTML='';kkBack(body,()=>kkUbah(body,c,i,'rumah'));
-  body.append(el('h3',null,'🏢 Rumah tingkat'),el('p','kk-muted','Dari TB Bata Jaya Jaya Joss. Rumahmu tetap di kavling yang sama, cuma nambah lantai. Warnanya ikut rumahmu sekarang, dan berlaku selamanya.'));
+  body.append(el('h3',null,'🏢 Rumah tingkat'),el('p','kk-muted','Dari TB Sinar Bata. Rumahmu tetap di kavling yang sama, cuma nambah lantai. Warnanya ikut rumahmu sekarang, dan berlaku selamanya.'));
   let pilih=kini<2?2:3;const g=el('div','kk-tiles');const opts=[[2,kini>=2?null:10],[3,kini>=3?null:(kini===2?4:14)]];
   const msg=el('p','kk-msg'),row=el('div','kk-row');
   const gambar=()=>{g.innerHTML='';opts.forEach(([n,h])=>{const b=el('button','kk-tile'+(h==null?' off':'')+(n===pilih&&h!=null?' on':''));b.type='button';b.append(kkTingkatSVG(r,n),el('b',null,'Tingkat '+n));
@@ -4303,7 +4303,7 @@ async function lamarNegeri(j){const QA=LOKER_QA();if(!KK_ON&&!QA){toast('Lamar l
   const body=kkModal();body.append(el('h3',null,'📝 Lamar: '+j.title),el('p','kk-muted','Melamar sebagai @'+k.u));if(QA)body.append(el('p','kk-note','🧪 Mode simulasi: lamaran ini TIDAK dikirim ke Pak RT. Coba-coba sepuasnya!'));
   const cek=await api('lamar-negeri',{job:j.id,cek:true},true);if(!cek.ok){body.append(el('p','kk-note',cek.error||'Gagal memuat'));return}
   if(cek.sudah)body.append(el('p','kk-note','✅ Kamu sudah melamar. Kirim lagi kalau mau ganti alasanmu.'));
-  const ta=el('textarea');ta.maxLength=200;ta.rows=4;ta.placeholder='Kenapa kamu cocok jadi '+j.title.replace(/ Playstation Kita$/,'')+'? (maks 200 huruf)';ta.style.cssText='width:100%;box-sizing:border-box;border:2px solid #1C2520;border-radius:12px;padding:10px;font-family:inherit;font-size:14px;margin:6px 0';if(cek.lamaran)ta.value=cek.lamaran.pesan||'';
+  const ta=el('textarea');ta.maxLength=200;ta.rows=4;ta.placeholder='Kenapa kamu cocok jadi '+j.title.replace(/ Konsel Kita$/,'')+'? (maks 200 huruf)';ta.style.cssText='width:100%;box-sizing:border-box;border:2px solid #1C2520;border-radius:12px;padding:10px;font-family:inherit;font-size:14px;margin:6px 0';if(cek.lamaran)ta.value=cek.lamaran.pesan||'';
   const lb=el('label');lb.style.cssText='display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin:6px 0 10px';const cb=el('input');cb.type='checkbox';lb.append(cb,el('span',null,'Aku sudah follow IG & subscribe YouTube @dusunkita.id (Pak RT bisa minta bukti screenshot ke calon terpilih)'));
   const msg=el('p','kk-msg');
   body.append(ta,lb,kkBtn('Kirim lamaran','gold3',async e=>{const bt=e.currentTarget;bt.disabled=true;const res=await api('lamar-negeri',{job:j.id,pesan:ta.value,follow:cb.checked},true);bt.disabled=false;
@@ -4327,7 +4327,7 @@ function renderEtalase(){const box=$('etalase');if(!box)return;box.innerHTML='';
   const rw=kkRumahMini({x:0,y:0,wall:'#F4D35E',roof:'#8E5AA8'});tile(rw,'Ubah warna','1','rumah',0,'Bata & tembok sesukamu');
   const re=kkRumahMini({x:0,y:0,wall:'#F1E4C6',roof:'#C4402F'});const ns='http://www.w3.org/2000/svg';[['rect',{x:50,y:2,width:2.5,height:30,fill:'#5A4A3A'}],['polygon',{points:'52.5,3 63,7 52.5,11',fill:'#F2C230',stroke:'#8A6A10','stroke-width':.8}]].forEach(([t,o])=>{const e=document.createElementNS(ns,t);for(const q in o)e.setAttribute(q,o[q]);re.append(e)});tile(re,'Bendera emas','2','rumah',1,'Berkibar di atap + masuk daftar Pendukung');
   let k=2;Object.entries(KK_ITEM).filter(([id])=>id!=='robot'&&id!=='konsol'&&id!=='patromax'&&id!=='sorot'&&id!=='naga').forEach(([id,v])=>tile(kkItemSVG(id,id==='papan'?'NAMAMU':null,id==='motor'?'biru':id==='sepeda'?'pink':null),v.n,String(v.h),'item',k++,v.d,v.k==='Eksklusif'));
-  tile(kkTingkatSVG({x:0,y:0,wall:'#F4D35E',roof:'#C4402F'},2),'Rumah tingkat 2','10','rumah',k++,'Di TB Bata Jaya Jaya Joss');tile(kkTingkatSVG({x:0,y:0,wall:'#BFE3F2',roof:'#2F74B5'},3),'Rumah tingkat 3','14','rumah',k++,'Tiap lantai boleh beda warna');
+  tile(kkTingkatSVG({x:0,y:0,wall:'#F4D35E',roof:'#C4402F'},2),'Rumah tingkat 2','10','rumah',k++,'Di TB Sinar Bata');tile(kkTingkatSVG({x:0,y:0,wall:'#BFE3F2',roof:'#2F74B5'},3),'Rumah tingkat 3','14','rumah',k++,'Tiap lantai boleh beda warna');
   if(RUKO_ON)tile(kkRukoMini('krem','biru'),'Ruko','20','rumah',k,'pekaranganmu jadi toko 30 hari');
   const cta=el('button','btn gold eta-cta',KK_ON?'🛍️ Belanja lewat Kartu Komen':'⏳ Dibuka bareng Kartu Komen');cta.type='button';cta.onclick=()=>kkBelanja('rumah');
   box.append(el('p','eta-lede',KK_ON?'Pilih barangnya, belinya lewat Kartu Komen-mu → Ubah rumah. Punya Recehan? Bayar langsung, barangnya langsung muncul!':'Segera dibuka! Barang-barang ini bisa kamu pasang di rumahmu lewat Kartu Komen.'),g,cta)}
@@ -4381,7 +4381,7 @@ if(location.hash==='#gento-rahasia')setTimeout(openDemoGento,800); if(location.h
 function cobaGento(){const k=Math.max(0,RES.findIndex(r=>r.name==='dusunkita.id'));select({kind:'r',i:k},{instant:true});cam.zoom=Math.max(cam.zoom,1.3);mulaiSetir(k,'robot');scrollMap();toast('Mode uji GENTO 🤖 (cuma terlihat di perangkatmu)')}
 addEventListener('hashchange',()=>{if(location.hash==='#ufo-rahasia')openUfo3D();if(location.hash==='#gento-rahasia')openDemoGento();if(location.hash==='#gento-jalan')cobaGento()});
 if(location.hash==='#gento-jalan')setTimeout(cobaGento,1200);
-// QA konsol Playstation Kita (belum dijual): #konsol-qa
+// QA konsol Konsel Kita (belum dijual): #konsol-qa
 function bukaKonsol(qa){const k=kkGet(),me=k&&k.u||'';const go=()=>window.KONSOL&&window.KONSOL.open({qa,me,kirim:k?(g,v)=>kkApi('konsol-skor',{g,v,qa:!!qa},true):null,rank:()=>fetch('/api/kartu?aksi=konsol-rank'+(qa?'&qa=1':'')).then(r=>r.json()).catch(()=>({}))});if(window.KONSOL)return go();const s=document.createElement('script');s.src='/konsol.js?v=14';s.onload=go;document.head.append(s)}
 // QA Liga Gang (dusun baru, belum dibuka): #liga-qa — 5 tim dusun, pemain diambil acak dari warga dusunnya
 const LIGA_TIM=()=>{const COL=['#C4402F','#2F74B5','#E07A3E','#2F9E6A','#E58AA6'];return [0,1,2,3,4].map(k=>({nama:dsnLabel(k),col:COL[k],pemain:RES.map((r,i)=>({r,i})).filter(o=>dsnOf(o.r.x,o.r.y)===k).map(o=>({n:String(o.r.name),i:o.i,d:+o.r.day||1}))}))}; // i = urutan warga di data (untuk snapshot roster), d = hari pindah
@@ -4641,12 +4641,12 @@ function drawDesa(v,t){if(!STQA)return;const D=desaBangun(),z=v.z;ctx.setTransfo
   // gerbang
   // gerbang Dusun Awal Kita (desa lama) di jalan keluar kampung, gaya sama dengan gerbang dusun baru
   gerbangPapan(D);
-  // Rental Playstation Kita: toko kecil, papan neon, etalase konsol, antrean anak-anak
+  // Rental Konsel Kita: toko kecil, papan neon, etalase konsol, antrean anak-anak
   {const R0=D.RT,kR=R0.w/(T*9.5),ccx=R0.x+R0.w/2,ccy=R0.y+R0.h/2;ctx.save();ctx.translate(ccx,ccy);ctx.scale(kR,kR);ctx.translate(-ccx,-ccy);const w=T*9.5,h=T*7.5,x=ccx-w/2,y=ccy-h/2;ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(x+8,y+10,w,h);ctx.fillStyle='#E9DFC6';ctx.fillRect(x,y,w,h);
    const bx=x+T*.8,by=y+T*.9,bw=w-T*1.6,bh=h*.62;ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(bx+6,by+8,bw,bh);ctx.fillStyle='#2B2F5E';ctx.fillRect(bx,by,bw,bh*.7);ctx.fillStyle='rgba(255,255,255,.1)';for(let i=0;i<bw;i+=T*.4)ctx.fillRect(bx+i,by,3,bh*.7);
    ctx.fillStyle='#F4EFE3';ctx.fillRect(bx,by+bh*.7,bw,bh*.3);for(let i=0;i<4;i++){const ex=bx+T*.4+i*(bw-T*.8)/4;ctx.fillStyle='#7FD8FF';ctx.fillRect(ex,by+bh*.75,(bw-T*.8)/4-T*.2,bh*.2);ctx.fillStyle='#2B2F5E';ctx.fillRect(ex+T*.25,by+bh*.8,T*.7,T*.35)}
    for(let i=0;i<7;i++){ctx.fillStyle=['#C4402F','#F2C230'][i%2];ctx.fillRect(bx+i*bw/7,by+bh*.66,bw/7,T*.3)}
-   const gl=.6+.4*Math.sin(t*4);papan(x+w/2,y-T*1.2,'🎮 RENTAL Playstation Kita',T*.65,`rgba(255,94,138,${gl})`,'#1C2520');
+   const gl=.6+.4*Math.sin(t*4);papan(x+w/2,y-T*1.2,'🎮 RENTAL Konsel Kita',T*.65,`rgba(255,94,138,${gl})`,'#1C2520');
    const kids=['#E07A3E','#8E5AA8','#2F9E6A','#3E8FC9'];kids.forEach((c,i)=>{const kx=x+T*1.4+i*T*1.4,ky=y+h-T*.9+Math.sin(t*3+i)*1.5;ctx.fillStyle=c;ctx.beginPath();ctx.arc(kx,ky,T*.32,0,7);ctx.fill();ctx.fillStyle='#F1C9A0';ctx.beginPath();ctx.arc(kx,ky-T*.1,T*.16,0,7);ctx.fill()});ctx.restore()}
   // Rumah GENTO: rumah besar + halaman + robot berdiri (belum dimiliki)
   {const g=D.GM,{x,y,w,h}=g;ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(x+10,y+12,w,h);ctx.fillStyle='#CFE3A4';ctx.fillRect(x,y,w,h);
@@ -4684,7 +4684,7 @@ function drawStadion(v,t){if(!STQA)return;stdPos();const z=v.z;ctx.setTransform(
   ctx.setTransform(1,0,0,1,0,0);
   if(window.__MALAM_N>0)dirty=true}
 function bukaStadion(){STQA=true;stdPos();muatLiga().then(()=>{dirty=true});flyTo({cx:STD.x+STD.w/2,cy:STD.y+STD.h/2,zoom:clampZ(Math.min(cw/(STD.w*1.5),ch/(STD.h*2)))},1000)}
-function bukaRental(){open3D({demo:'rental',name:'rental',nick:'🎮 Rental Playstation Kita',x:0,y:0,wall:'krem',roof:'biru',items:[]},0)}
+function bukaRental(){open3D({demo:'rental',name:'rental',nick:'🎮 Rental Konsel Kita',x:0,y:0,wall:'krem',roof:'biru',items:[]},0)}
 function isiRental(body){body.append(el('p',null,'Konsol game kampung, 14 in 1! Skor terbaikmu ikut 🏆 ranking.'));
   {const G=[['⚽','Adu Penalti'],['🏠','Tangkap Bata'],['🎣','Pancing Ikan'],['🍜','Racik Bakso'],['🐔','Kejar Ayam'],['🥔','Balap Karung'],['🪁','Layangan'],['🃏','Memori Bata'],['🎋','Panjat Pinang'],['🔔','Tebak Kentongan'],['🪢','Lompat Karet'],['✈️','Pesawat Nembak'],['💪','Tarik Tambang'],['🦯','Egrang']];
    const g=el('div','rt-grid');G.forEach(([ic,n],i)=>{const d=el('div','rt-g');d.append(el('i',null,ic),el('b',null,n),el('small',null,String(i+1).padStart(2,'0')));g.append(d)});body.append(g)}
@@ -4729,7 +4729,7 @@ async function open3D(r,i,bd0){document.querySelectorAll('.v3skill').forEach(x=>
   if(r&&r.demo==='sorot'){const ow=window.SOROT_OWNER;const d=el('div','kk-game on');const gh=el('div','kk-gh');gh.append(kkItemSVG('sorot'),el('b',null,ow?'Lampu Sorot Langit':'Lampu Sorot Langit · 19 Receh'));d.append(gh);
     if(ow){d.append(el('p','kk-muted','Dimiliki @'+ow+' sejak '+robotSejak('sorot')+'. Cuma ada 1 di kampung!'),kkBtn('🏠 Lihat rumah @'+ow,'gold3',()=>{close3D();const i=kkResIdx(ow);if(i>=0){select({kind:'r',i});scrollMap()}}))}
     else d.append(el('p','kk-muted','Cuma ada 1 di kampung dan belum ada pemiliknya. Tiap malam, @username-mu terpampang di langit kampung!'),el('p','kk-note','ℹ️ Contoh: Lampu Sorot di rumah @dusunkita.id. Punyamu nanti di pekarangan rumahmu, yang muncul di langit @username-mu.'),kkBtn('🛒 Beli Lampu Sorot · 19 Receh','gold3',()=>{close3D();kkBelanja('item')}));$('v3demo').append(d)}
-  if(r&&r.demo==='konsol'){const mg=el('div','kk-game on');const gh=el('div','kk-gh');gh.append(kkItemSVG('konsol'),el('b',null,'Playstation Kita 1.0'));
+  if(r&&r.demo==='konsol'){const mg=el('div','kk-game on');const gh=el('div','kk-gh');gh.append(kkItemSVG('konsol'),el('b',null,'Konsel Kita 1.0'));
     mg.append(gh,el('p','kk-muted','Begini tampilannya di Kartu Komen pemilik. 14 mini game, skor terbaik masuk 🏆 Ranking pemilik!'),kkBtn('🎮 Main sekarang','gold3',()=>bukaKonsol(true)));$('v3demo').append(mg)}
   if(r&&r.demo===true){const d=el('div','dshop');const im=el('img');im.src='contoh-toko.jpg';im.alt='Contoh foto produk';const tx=el('div');
     tx.append(el('b',null,'🏪 Toko Kamu'),moreText(null,'Keripik pedas bikinan sendiri, level 1–5. Pedasnya nampol tapi bikin nagih! Dibuat tiap hari dari singkong pilihan, tanpa pengawet. Tersedia ukuran 100 gr dan 250 gr. Bisa COD sekitar kampung atau kirim ke seluruh Indonesia. Order lewat link di bawah ya!',2));
@@ -4738,7 +4738,7 @@ async function open3D(r,i,bd0){document.querySelectorAll('.v3skill').forEach(x=>
     const goU=(t,fn)=>{const i=el('i','go',t+' ›');i.title='Lihat';i.onclick=e=>{e.stopPropagation();close3D();fn()};return i};
     bd.append(goU(bo?bossTxt(bd0,bo):'🏗️ Dibangun oleh Pak RT',()=>{if(!bo){select({kind:'o'});scrollMap();return}const k=RES.findIndex(x=>x.name===bo);if(k>=0){select({kind:'r',i:k});scrollMap()}else toast('Rumahnya belum ada di peta')}));
     if(bd0.type!=='tugu')bd.append(st.length?el('i',null,`👷 ${st.length} karyawan`):goU('👷 Belum ada karyawan',()=>{location.hash='loker';fromLink()}))}
-  else{$('v3name').textContent=r.demo?r.nick:(r.nick?r.nick+' · ':'')+'@'+r.name;$('v3sub').textContent=r.demo==='naga'?(r.nagaPemilik?'👑 Milik @'+r.nagaPemilik+' · sejak '+robotSejak('naga'):'Si Bata di punggung · Cilok, Cireng, Cimol mengekor · 25 Receh · belum ada pemilik'):r.demo==='ufo'?'Momen langka! UFO Nyasar cuma muncul sebentar malam ini 🛸':r.demo==='monumen'?NAMA_DESA+' · 3 rumah juara reaksi terbanyak tiap pekan':r.demo==='rental'?NAMA_DESA+' · sewa 1 Receh/hari atau beli 4 Receh':r.demo==='konsol'?'🎮 Playstation Kita 1.0 di pekarangan · 4 Receh':r.demo==='gento'?(window.ROBOT_OWNER?'👑 Milik @'+window.ROBOT_OWNER+' · sejak '+robotSejak():'Robot eksklusif · cuma 1 di kampung · 22 Receh · coba tekan Tembak mercon!'):r.demo==='sorot'?(window.SOROT_OWNER?'👑 Milik @'+window.SOROT_OWNER+' · sejak '+robotSejak('sorot'):'Lampu eksklusif · cuma 1 di kampung · 19 Receh · contoh di rumah @dusunkita.id'):r.demo==='patromax'?(window.PATRO_OWNER?'👑 Milik @'+window.PATRO_OWNER+' · sejak '+robotSejak('patromax'):'Lampu eksklusif · cuma 1 di kampung · 12 Receh · contoh di rumah @dusunkita.id'):r.demo?'Contoh ruko · paket Buka Usaha (20 Receh)':`Warga #${i+2} · pindah hari ke-${r.day||1}`;}
+  else{$('v3name').textContent=r.demo?r.nick:(r.nick?r.nick+' · ':'')+'@'+r.name;$('v3sub').textContent=r.demo==='naga'?(r.nagaPemilik?'👑 Milik @'+r.nagaPemilik+' · sejak '+robotSejak('naga'):'Si Bata di punggung · Cilok, Cireng, Cimol mengekor · 25 Receh · belum ada pemilik'):r.demo==='ufo'?'Momen langka! UFO Nyasar cuma muncul sebentar malam ini 🛸':r.demo==='monumen'?NAMA_DESA+' · 3 rumah juara reaksi terbanyak tiap pekan':r.demo==='rental'?NAMA_DESA+' · sewa 1 Receh/hari atau beli 4 Receh':r.demo==='konsol'?'🎮 Konsel Kita 1.0 di pekarangan · 4 Receh':r.demo==='gento'?(window.ROBOT_OWNER?'👑 Milik @'+window.ROBOT_OWNER+' · sejak '+robotSejak():'Robot eksklusif · cuma 1 di kampung · 22 Receh · coba tekan Tembak mercon!'):r.demo==='sorot'?(window.SOROT_OWNER?'👑 Milik @'+window.SOROT_OWNER+' · sejak '+robotSejak('sorot'):'Lampu eksklusif · cuma 1 di kampung · 19 Receh · contoh di rumah @dusunkita.id'):r.demo==='patromax'?(window.PATRO_OWNER?'👑 Milik @'+window.PATRO_OWNER+' · sejak '+robotSejak('patromax'):'Lampu eksklusif · cuma 1 di kampung · 12 Receh · contoh di rumah @dusunkita.id'):r.demo?'Contoh ruko · paket Buka Usaha (20 Receh)':`Warga #${i+2} · pindah hari ke-${r.day||1}`;}
   if(!bd0)perksOf(r).forEach(t=>bd.append(perkEl(t)));if(!bd0&&NK.jobOn(r))bd.append(el('i',null,'Tukang Proyek'));
   let swap=null,want=null; // riwayat rumah: ganti tampilan rumah 3D (bendera & mahkota tetap)
   if(!bd0&&!r.demo){const mine=KK_ON&&(kkGet()||{}).u===String(r.name).toLowerCase();
@@ -4819,7 +4819,7 @@ async function makeCard(src,r,i,bd0){try{await document.fonts.ready}catch(e){}
   const JG=!bd0&&r&&!r.demo&&JUR>=0&&RES[JUR]&&RES[JUR].name===r.name;
   const g=c.createLinearGradient(0,0,0,H);if(JG){g.addColorStop(0,'#FFF3C4');g.addColorStop(1,'#F2D27A')}else{g.addColorStop(0,'#EEF2E6');g.addColorStop(1,'#DCE8D2')}c.fillStyle=g;c.fillRect(0,0,W,H);
   if(JG){c.lineWidth=28;c.strokeStyle='#D4A72C';c.strokeRect(14,14,W-28,H-28);c.lineWidth=6;c.strokeStyle='#1C2520';c.strokeRect(36,36,W-72,H-72)}
-  c.fillStyle='#1C2520';c.textAlign='center';c.font=`700 34px ${FB}`;c.fillText('N E G E R I   K O M E N',W/2,JG?100:150);
+  c.fillStyle='#1C2520';c.textAlign='center';c.font=`700 34px ${FB}`;c.fillText('D U S U N   K I T A',W/2,JG?100:150);
   c.font=`800 76px ${FD}`;if(JG){c.font=`800 38px ${FB}`;c.fillStyle='#8A5A00';c.fillText('👑 SESEPUH DUSUN 👑',W/2,150);c.fillStyle='#1C2520';c.font=`800 76px ${FD}`}
   c.fillText(r&&r.demo==='naga'?'NAGASARI & Si Bata':bd0?'Bangunan kampung':r&&(r.demo==='monumen'||r.demo==='rental')?'Bangunan dusun baru':r&&r.demo==='gento'?'Robot Eksklusif':r&&(r.demo==='patromax'||r.demo==='sorot')?'Lampu Eksklusif':'Rumahku di kampung',W/2,250);
   /* gambar 3D */
@@ -4830,7 +4830,7 @@ async function makeCard(src,r,i,bd0){try{await document.fonts.ready}catch(e){}
   c.restore();c.lineWidth=6;c.strokeStyle='#1C2520';rr(c,X,Y,S,S,40);c.stroke();
   /* nama */
   c.fillStyle='#1C2520';const nm=bd0?(bd0.name||'Bangunan'):(r.nick||('@'+r.name));fitText(c,nm,W-120,84,FD);c.fillText(nm,W/2,1400);
-  c.font=`600 42px ${FB}`;c.fillStyle='#5B6860';c.fillText(r&&r.demo==='ufo'?(window.UFO_KE?`🛸 Penemu UFO ke-${window.UFO_KE} · `:'🛸 Momen langka · ')+'Malam '+new Date(Date.now()+252e5).toISOString().slice(0,10).split('-').reverse().slice(0,2).join('/'):r&&r.demo==='gento'?(window.ROBOT_OWNER?'👑 Milik @'+window.ROBOT_OWNER+' · sejak '+robotSejak():'🤖 Robot eksklusif · cuma 1 di kampung'):r&&r.demo==='naga'?'Si Bata · Cilok, Cireng, Cimol'+(r.nagaPemilik?' · milik @'+r.nagaPemilik:' · belum ada pemilik'):r&&r.demo==='monumen'?(()=>{const L=idmJuara();return L.length?'🥇 '+L.slice(0,3).map(o=>'@'+o.u).join(' · '):'💞 3 rumah juara reaksi tiap pekan'})():r&&r.demo==='rental'?'🎮 Rental Playstation Kita · '+NAMA_DESA:r&&r.demo?'Contoh ruko · paket Buka Usaha':bd0?'📅 Diresmikan '+resmi(bd0.day):(r.nick?'@'+r.name+' · ':'')+`Warga #${i+2} · hari ke-${r.day||1}`,W/2,1465);
+  c.font=`600 42px ${FB}`;c.fillStyle='#5B6860';c.fillText(r&&r.demo==='ufo'?(window.UFO_KE?`🛸 Penemu UFO ke-${window.UFO_KE} · `:'🛸 Momen langka · ')+'Malam '+new Date(Date.now()+252e5).toISOString().slice(0,10).split('-').reverse().slice(0,2).join('/'):r&&r.demo==='gento'?(window.ROBOT_OWNER?'👑 Milik @'+window.ROBOT_OWNER+' · sejak '+robotSejak():'🤖 Robot eksklusif · cuma 1 di kampung'):r&&r.demo==='naga'?'Si Bata · Cilok, Cireng, Cimol'+(r.nagaPemilik?' · milik @'+r.nagaPemilik:' · belum ada pemilik'):r&&r.demo==='monumen'?(()=>{const L=idmJuara();return L.length?'🥇 '+L.slice(0,3).map(o=>'@'+o.u).join(' · '):'💞 3 rumah juara reaksi tiap pekan'})():r&&r.demo==='rental'?'🎮 Rental Konsel Kita · '+NAMA_DESA:r&&r.demo?'Contoh ruko · paket Buka Usaha':bd0?'📅 Diresmikan '+resmi(bd0.day):(r.nick?'@'+r.name+' · ':'')+`Warga #${i+2} · hari ke-${r.day||1}`,W/2,1465);
   const tags=[];if(bd0){const bo=bossOf(bd0);tags.push(bo?bossTxt(bd0,bo):'🏗️ Dibangun oleh Pak RT');const n=staffOf(bd0).length;if(n)tags.push(`👷 ${n} karyawan`)}else{tags.push(...perksOf(r).map(String));if(NK.jobOn(r))tags.push('🦺 Tukang Proyek')}
   if(tags.length){c.font=`700 32px ${FB}`;const rows=[[]];let rw=0;const gap=14,maxW=W-100;
     tags.slice(0,6).forEach(t=>{const w=c.measureText(t).width+44;if(rw+w>maxW&&rows[rows.length-1].length){rows.push([]);rw=0}rows[rows.length-1].push({t,w});rw+=w+gap});
