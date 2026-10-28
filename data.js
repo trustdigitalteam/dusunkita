@@ -54,7 +54,44 @@ window.NK_DATA = {
  },
  "dusun": [],
  "residents": [],
- "buildings": [],
+ "buildings": [
+  {
+   "type": "posronda",
+   "name": "Pos Ronda",
+   "by": "dusunkita.id",
+   "day": 1,
+   "x": 44,
+   "y": 46,
+   "w": 1
+  },
+  {
+   "type": "warung",
+   "name": "Warung Pak RT",
+   "by": "dusunkita.id",
+   "day": 1,
+   "x": 46,
+   "y": 44,
+   "w": 1
+  },
+  {
+   "type": "tugu",
+   "name": "Pohon Beringin Tua",
+   "by": "dusunkita.id",
+   "day": 1,
+   "x": 45,
+   "y": 45,
+   "w": 1
+  },
+  {
+   "type": "taman",
+   "name": "Alun-Alun Dusun",
+   "by": "dusunkita.id",
+   "day": 1,
+   "x": 47,
+   "y": 47,
+   "w": 1
+  }
+ ],
  "awards": [],
  "juraganHistory": []
 };

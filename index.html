@@ -703,7 +703,9 @@ const BTYPES={
 };
 const STARTER=[
   {type:'posronda',name:'Pos Ronda',by:'dusunkita.id',day:1,x:C-1,y:C+1,w:1},
-  {type:'warung',name:'Warung',by:'dusunkita.id',day:1,x:C+1,y:C-1,w:1}
+  {type:'warung',name:'Warung Pak RT',by:'dusunkita.id',day:1,x:C+1,y:C-1,w:1},
+  {type:'tugu',name:'Pohon Beringin Tua',by:'dusunkita.id',day:1,x:C,y:C,w:1},
+  {type:'taman',name:'Alun-Alun Dusun',by:'dusunkita.id',day:1,x:C+2,y:C+2,w:1}
 ];
 function tilesOf(b){const w=b.w||3,out=[];for(let i=0;i<w;i++)for(let j=0;j<w;j++)out.push(key(b.x+i,b.y+j));return out}
 function usedTiles(buildings){const s=new Set();(buildings||[]).forEach(b=>tilesOf(b).forEach(k=>s.add(k)));return s}
