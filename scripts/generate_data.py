@@ -25,7 +25,7 @@ BASE = {
     "target": 1000,
     "supOthers": 0,
     "tontonan": {"akun": [], "items": []},
-    "trakteer": {"url": "https://trakteer.id/dusunkita.id", "unit": "Bata"},
+    "trakteer": {"url": "", "unit": "Bata"},
     "voucher": {"url": "", "label": ""},
     "toko": {"csv": "", "form": "", "fUser": "", "fKode": ""},
     "quest": {},

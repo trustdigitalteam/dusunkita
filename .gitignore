@@ -4,6 +4,8 @@
 .env
 .env.*
 scripts/state.json
+scripts/antrian.json
+scripts/cron.log
 # node
 node_modules/
 .vercel/
