@@ -71,6 +71,18 @@ a{color:var(--gent)}
     </table>
   </div>
 
+  <div class="card" id="videoCard">
+    <h2>🎬 Video Pipeline <span style="font-size:13px;color:var(--muted);font-weight:400">(15 detik · Remotion + Gemini TTS)</span></h2>
+    <div class="row">
+      <button id="btnRender" class="gent">⚡ Render EP-<span id="btnEp">1</span></button>
+      <button id="btnVidRefresh" class="sec">🔄 Refresh</button>
+      <input id="epInput" type="number" min="1" max="99" value="1" style="width:70px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:10px">
+      <a id="vidLink" href="#" target="_blank" style="align-self:center;font-size:14px">📥 Download video terakhir</a>
+    </div>
+    <div id="vidSteps"></div>
+    <p class="msg" id="vidMsg">Memuat status pipeline…</p>
+  </div>
+
   <div class="card">
     <h2>🔗 Koneksi</h2>
     <p style="margin:0;font-size:14px">
@@ -84,6 +96,7 @@ a{color:var(--gent)}
 const $=id=>document.getElementById(id);
 const ADMIN_KEY='dusunkita-45b03625615b0371';
 const API='/api/admin?key='+ADMIN_KEY;
+const VAPI='/api/video?key='+ADMIN_KEY;
 const WARN={'merah':'#8B3A2E','merah muda':'#C67A7A','pink':'#C67A7A','biru':'#2F6BA5','biru muda':'#6FA8D0','tosca':'#2A938A','hijau':'#2E8C5A','hijau muda':'#7CC46A','kuning':'#D4A02A','oranye':'#D4762A','orange':'#D4762A','ungu':'#7A4A98','ungu muda':'#A98BC7','putih':'#E0DDD4','hitam':'#2A2A2A','abu':'#7A7F84','abu-abu':'#7A7F84','coklat':'#7A4A2C','krem':'#D8C69E','emas':'#C49A2C','navy':'#1E3A5E','marun':'#5E1A23','terakota':'#A8543A'};
 function sw(c){const k=(c||'putih').toLowerCase();return '<span class="swatch" style="background:'+(WARN[k]||'#ccc')+'"></span>'+(c||'?')}
 async function jfetch(url,opt){const r=await fetch(url,opt);const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t}}}
@@ -131,6 +144,45 @@ function renderWarga(list){
   if(!list.length)tb.innerHTML='<tr><td colspan="6" class="empty">Belum ada warga.</td></tr>';
 }
 $('#btnRefresh').onclick=refresh;
+
+// ===== Video pipeline panel =====
+const VID_ICONS={state:'📊',screenshot:'📸',brief:'📝',tts:'🗣️',render:'⚡',mix:'🎚️',push:'📤'};
+function vidStepIcon(s){const map={running:'🔄',done:'✅',idle:'⏸️',error:'❌',pending:'⏳'};return map[s]||'⏳'}
+function loadVideo(){
+  jfetch(VAPI+'?m=pipeline').then(d=>{
+    if(!d.ok){$('vidMsg').className='msg err';$('vidMsg').textContent='Gagal load pipeline: '+(d.error||'');return}
+    const box=$('vidSteps');box.innerHTML='';
+    d.steps.forEach(s=>{
+      const cls={running:'tag pending',done:'tag approved',error:'tag rejected',idle:''}[s.status]||'';
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)';
+      row.innerHTML='<span style="width:32px">'+VID_ICONS[s.id]+'</span>'+
+        '<b style="min-width:140px">'+s.label+'</b>'+
+        '<span class="tag '+(s.status==='done'?'approved':s.status==='running'?'pending':s.status==='error'?'rejected':'')+'">'+vidStepIcon(s.status)+' '+s.status+'</span>'+
+        '<span style="color:var(--muted);font-size:13px">'+s.desc+'</span>';
+      box.append(row);
+    });
+    const lr=d.lastRender;
+    if(lr){
+      $('vidMsg').className='msg'+(lr.ok?' ok':' err');
+      $('vidMsg').textContent='EP-'+String(lr.ep).padStart(3,'0')+': '+(lr.ok?'SIAP ('+(lr.size//1024)+'KB)':'GAGAL')+' · mulai '+(lr.started||'')+ (lr.finished?' · selesai '+lr.finished:'');
+      if(lr.ok&&d.videoUrl){$('vidLink').href=d.videoUrl;$('vidLink').hidden=false}else{$('vidLink').hidden=true}
+    }else{
+      $('vidMsg').textContent='Belum pernah render. Klik "⚡ Render" untuk mulai.';$('vidLink').hidden=true;
+    }
+    $('btnEp').textContent=$('epInput').value||'1';
+  });
+}
+$('#btnVidRefresh').onclick=loadVideo;
+$('epInput').onchange=()=>{$('btnEp').textContent=$('epInput').value||'1'};
+$('#btnRender').onclick=async()=>{
+  const ep=$('epInput').value||'1';
+  const d=await jfetch(VAPI+'?m=trigger&ep='+encodeURIComponent(ep));
+  if(d.ok){$('vidMsg').className='msg ok';$('vidMsg').textContent='Render EP-'+ep+' ditrigger. Refresh lagi dalam ±2 menit.';setTimeout(loadVideo,30000)}
+  else{$('vidMsg').className='msg err';$('vidMsg').textContent='Gagal trigger: '+(d.error||'')}
+};
+loadVideo();
+
 refresh();
 setInterval(refresh,30000);
 </script>

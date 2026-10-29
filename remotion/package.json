@@ -1,0 +1,21 @@
+{
+  "name": "dusunkita-remotion",
+  "version": "1.0.0",
+  "description": "Remotion video renderer for Dusun Kita IG Reels (1080x1920, 9:16)",
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render",
+    "render-ep": "node scripts/render-ep.js"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/bundler": "^4.0.0",
+    "remotion": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.5.0"
+  }
+}
