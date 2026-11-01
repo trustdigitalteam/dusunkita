@@ -30,6 +30,25 @@
 | Rental Playstation | **Rental Konsel Kita** |
 | Genteng (mata uang traktir) | Bata |
 
+## REBRAND V2 — KAMPUNG PESISIR (RENCANA, belum eksekusi)
+
+> Lihat `docs/PESISIR.md` untuk detail lengkap.
+
+Arah baru: **beda SUASANA + BANGUNAN + KONSEP + ITEM + CARA PRODUKSI KONTEN** dari Negeri Komen, mulai dari NOL (day=1).
+
+| Aspek | Negeri Komen | Dusun Kita Pesisir |
+|---|---|---|
+| Suasana | senja tropis, gunung, terowongan | **kampung pesisir**: laut + sungai + muara |
+| Rumah | genteng merah | rumah panggung + atap nipah |
+| Transportasi | angkot/heli/truk | getek + perahu jukung |
+| Fasilitas | gardu/menara air/BTS | tambak, sumur, dermaga getek, pasar kaget |
+| Item eksklusif | GENTO/NAGASARI/MBULAN/Karpet | GETEK MESIN/LELE RAKSASA/BURUNG WARU/BALON BATA |
+| Mini game | 14 konsol + liga + cup + panen | Tangkap Bata + getek + panjat waru (berkembang) |
+| Narator | Mbak Tena (TV) | Pak RT + Bu Waru |
+| CTA | komen "RUMAH" | komen "BATA" |
+
+**Status: menunggu approval.** Urutan eksekusi ada di `docs/PESISIR.md` §7.
+
 ## ROADMAP 45 HARI
 
 ### FASE 0 — Persiapan (H-1 s.d. Hari 0)
