@@ -1,144 +1,144 @@
 #!/usr/bin/env python3
-"""Render video reels Dusun Kita dari brief episode + screenshot peta.
-
-Baca docs/episodes/EP-NNN.md (shot list + overlay) → generate:
-  - PNG overlay per shot (Pillow)
-  - MP4 1080x1920 30fps (ffmpeg), shot 5× 6 detik = 30 detik
-  - BGM: silent (voiceover manual / tambah BGM sendiri)
-
-Jalankan:
-  python3 scripts/render_video.py --ep 1
-Output: videos/EP-001.mp4
+"""Render reels Dusun Kita (1080x1920, 30fps, 30s) dari brief + screenshot.
+Improvement: overlay drop shadow (tanpa box), zoom-in pelan per shot, fade antar shot, BGM.
+Jalankan: python3 scripts/render_video.py --ep 1
+Output: videos/EP-001-final.mp4
 """
-import json, os, re, sys, argparse, datetime
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+import json, os, re, sys, argparse, subprocess
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 W, H = 1080, 1920
 FPS = 30
 SHOT_SEC = 6
+FADE = 0.4  # detik fade di tiap boundary
 
-def load_ep(ep_num):
-    p = os.path.join(ROOT, f"docs/episodes/EP-{ep_num:03d}.md")
-    if not os.path.exists(p):
-        print(f"EP-{ep_num:03d}.md tidak ada. Jalankan: python3 scripts/konten.py")
-        sys.exit(1)
-    text = open(p).read()
-    shots = []
-    parts = re.split(r"\n### Shot \d+ — ", text)[1:]
-    for i, part in enumerate(parts, 1):
-        first_line = part.split("\n", 1)[0].strip()
-        judul = first_line
-        visual = ""
-        m = re.search(r"\*\*Visual:\*\*\s*(.+)", part)
-        if m: visual = m.group(1).strip()
-        ov = ""
-        mo = re.search(r"\*\*Overlay:\*\*\s*\n```\s*(.*?)```", part, re.S)
-        if mo: ov = mo.group(1).strip()
-        vo = ""
-        mv = re.search(r'\*\*Voiceover:\*\*\s*"?(.+?)"?\s*$', part, re.M)
-        if mv: vo = mv.group(1).strip().strip('"')
-        shots.append({"idx": i, "judul": judul, "visual": visual, "overlay": ov, "voiceover": vo})
-    return shots, text
+# teks overlay per shot (authoritative: versi brief EP-001)
+OVERLAYS = {
+1: ["DUSUN KITA DIBUKA", "Hari ke-1 · 0 warga"],
+2: ["Mulai dari 0:", "✅ Pos Ronda", "✅ Warung", "❌ Belum ada warga"],
+3: ["CARA JADI WARGA:", "1. Follow @dusunkita.id", "2. Komen: NAMA, BATA <warna>,", "   TEMBOK <warna>", "Contoh: Budi, bata merah,"],
+4: ["GOAL: BANGUN BALAI DUSUN", "Target: 100 Bata"],
+5: ["Komen sekarang:", "NAMA, BATA <warna>, TEMBOK <warna>", "@dusunkita.id", "dusunkita.vercel.app"],
+}
 
-def get_screenshot(ep_num, idx):
-    """Ambil screenshot terbaru dari folder, atau fallback ke shot1."""
-    ss_dir = os.path.join(ROOT, "screenshots")
-    if not os.path.exists(ss_dir):
-        return None
-    files = sorted(f for f in os.listdir(ss_dir) if f.startswith("shot") and f.endswith(".png"))
-    if not files:
-        files = sorted(f for f in os.listdir(ss_dir) if f.startswith("peta") and f.endswith(".png"))
-    if not files:
-        print("Tidak ada screenshot. Jalankan: python3 scripts/screenshot.py")
-        sys.exit(1)
-    # pakai shot sesuai idx, fallback ke shot1
-    name = f"shot{idx}-"
-    match = [f for f in files if f.startswith(name)]
-    if match:
-        return os.path.join(ss_dir, match[0])
-    return os.path.join(ss_dir, files[0])  # fallback
-
-def make_overlay(idx, judul, overlay_text, path):
-    """Buat overlay PNG 1080x1920: background semi-transparan + text overlay."""
-    bg = Image.new("RGBA", (W, H), (0,0,0,0))
-    dr = ImageDraw.Draw(bg)
-    # cari font
-    font_big = None; font_med = None; font_sm = None
+def font(sz):
     for fp in ["/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-               "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"]:
+               "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+               "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf"]:
         if os.path.exists(fp):
-            try:
-                font_big = ImageFont.truetype(fp, 56)
-                font_med = ImageFont.truetype(fp, 36)
-                font_sm  = ImageFont.truetype(fp, 28)
-            except Exception:
-                pass
-            break
-    if font_big is None:
-        font_big = ImageFont.load_default(); font_med = font_big; font_sm = font_big
+            try: return ImageFont.truetype(fp, sz)
+            except Exception: pass
+    return ImageFont.load_default()
 
-    # box transparan di tengah
-    lines = (overlay_text or "").split("\n")
-    box_h = 80 + len(lines)*60
-    box_y = H//2 - box_h//2
-    dr.rounded_rectangle([80, box_y, W-80, box_y+box_h], radius=30, fill=(28,37,32,220))
-    # judul
-    dr.text((W//2, box_y+30), f"Shot {idx} · {judul}", font=font_sm, fill=(242,194,48,255), anchor="mt")
-    # overlay text
-    y = box_y + 80
-    for ln in lines:
-        dr.text((W//2, y), ln, font=font_big, fill=(255,255,255,255), anchor="mt")
-        y += 60
-    bg.save(path)
-    return path
+def make_overlay(idx, path):
+    lines = OVERLAYS.get(idx, [])
+    img = Image.new("RGBA", (W, H), (0,0,0,0))
+    dr = ImageDraw.Draw(img)
+    f_big = font(60)
+    f_med = font(40)
+    f_sm  = font(34)
+    n = len(lines)
+    # posisi tengah vertical
+    block_h = n*70
+    y0 = H//2 - block_h//2
+    for i, ln in enumerate(lines):
+        sz = f_big if i == 0 else (f_sm if (len(ln) > 22 or ln.startswith(("   ","Contoh"))) else f_med)
+        x = W//2
+        yy = y0 + i*70
+        # drop shadow (offset 3px hitam, lalu teks utama putih)
+        dr.text((x+3, yy+3), ln, font=sz, fill=(0,0,0,255), anchor="mt")
+        dr.text((x, yy), ln, font=sz, fill=(255,255,255,255), anchor="mt")
+    img.save(path)
 
-def render_mp4(ep_num, shots):
+def get_base_screenshot():
+    ss_dir = os.path.join(ROOT, "screenshots")
+    files = [f for f in os.listdir(ss_dir) if f.startswith("peta") and f.endswith(".png")]
+    files.sort()
+    if not files:
+        print("Tidak ada screenshot peta. Jalankan: python3 scripts/screenshot.py"); sys.exit(1)
+    return os.path.join(ss_dir, files[-1])
+
+def get_bgm():
+    # cari BGM: prefer ambience dari repo NC/DK, fallback silent
+    for cand in [os.path.join(ROOT,"ambience.mp3"),
+                 "/root/.hermes/skills/negeri-komen/references/media/ambience.mp3"]:
+        if os.path.exists(cand): return cand
+    return None
+
+def render(ep_num):
     out_dir = os.path.join(ROOT, "videos"); os.makedirs(out_dir, exist_ok=True)
-    out = os.path.join(out_dir, f"EP-{ep_num:03d}.mp4")
-    overlay_files = []
-    for i, s in enumerate(shots, 1):
-        ss = get_screenshot(ep_num, i)
-        ov = os.path.join(out_dir, f"ep{ep_num:03d}-shot{i}-overlay.png")
-        if ss:
-            make_overlay(i, s["judul"], s.get("overlay",""), ov)
-        overlay_files.append((ss, ov))
-    # ffmpeg: each shot 6 detik (loop screenshot + overlay), concat
-    import subprocess
-    cmd = ["ffmpeg","-y","-loglevel","error"]
-    for j,(ss,ov) in enumerate(overlay_files):
-        if ss:
-            cmd += ["-loop","1","-framerate","30","-t",str(SHOT_SEC),"-i",ss]
-        # overlay
-        cmd += ["-loop","1","-framerate","30","-t",str(SHOT_SEC),"-i",ov]
-    # filter: overlay + concat
-    n = len(overlay_files)
-    filter_parts = []
+    base = get_base_screenshot()
+    bgm = get_bgm()
+    out = os.path.join(out_dir, f"EP-{ep_num:03d}-final.mp4")
+
+    # 1) buat overlay per shot
+    ovs = []
+    for i in range(1, 6):
+        p = os.path.join(out_dir, f"ep{ep_num:03d}-o{i}.png")
+        make_overlay(i, p); ovs.append(p)
+
+    # 2) zoom-in + fade per shot via filter_complex
+    # tiap shot: base loop 6s, zoompan in (1.0->1.12), fade out/in, overlay text
+    n = 5
+    filt = []
     for j in range(n):
-        ss_i = j*2; ov_i = j*2+1
-        filter_parts.append(f"[{ss_i}:v]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}[s{j}]")
-        filter_parts.append(f"[s{j}][{ov_i}:v]overlay=0:0[sh{j}]")
+        zsrc = f"z{j}"
+        # zoom-in via zoompan (zoom 1.0 -> 1.12 over 180 frames). x/y center.
+        filt.append(
+            f"[{j}:v]scale=1620:2880,zoompan=z=min(zoom+0.000666\\,1.12):d=180:"
+            f"x=(iw-iw/zoom)/2:y=(ih-ih/zoom)/2:s=1080x1920:fps=30[{zsrc}]"
+        )
+        # fade: in 0.4s (shot pertama skip in), out 0.4s (shot terakhir skip out)
+        f_in = 0 if j == 0 else FADE
+        f_out = 0 if j == n-1 else FADE
+        chain = f"[{zsrc}]"
+        if f_in: chain += f"fade=t=in:st=0:d={f_in},"
+        if f_out: chain += f"fade=t=out:st={SHOT_SEC-f_out}:d={f_out},"
+        chain += f"[zov{j}]"
+        filt.append(chain)
+        # overlay text
+        filt.append(f"[zov{j}][{j+5}:v]overlay=0:0[sh{j}]")
     concat = "".join(f"[sh{j}]" for j in range(n))
-    filter_parts.append(f"{concat}concat=n={n}:v=1:a=0[out]")
-    cmd += ["-filter_complex",";".join(filter_parts),"-map","[out]","-r","30",
-            "-c:v","libx264","-pix_fmt","yuv420p","-crf","20","-preset","fast",
-            "-t",str(n*SHOT_SEC),out]
-    print("Rendering:", " ".join(cmd[:10]), "…")
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    filt.append(f"{concat}concat=n={n}:v=1:a=0[vout]")
+
+    cmd = ["ffmpeg","-y","-loglevel","error"]
+    for _ in range(n):
+        cmd += ["-loop","1","-framerate","30","-t",str(SHOT_SEC),"-i", base]
+    for p in ovs:
+        cmd += ["-loop","1","-framerate","30","-t",str(SHOT_SEC),"-i", p]
+
+    r = None
+    import tempfile
+    ffile = os.path.join(out_dir, f"ep{ep_num:03d}-filter.txt")
+    with open(ffile, "w") as f:
+        f.write(";\n".join(filt) + "\n")
+    if bgm:
+        cmd += ["-stream_loop","-1","-i", bgm]
+        audio_in = 10
+        filt.append(f"[{audio_in}:a]atrim=0:{n*SHOT_SEC},afade=t=out:st={n*SHOT_SEC-1.5}:d=1.5[aout]")
+        # tulis ulang filter file dengan audio chain
+        with open(ffile,"w") as f: f.write(";\n".join(filt)+"\n")
+        cmd += ["-filter_complex_script", ffile,
+                "-map","[vout]","-map","[aout]",
+                "-r","30","-c:v","libx264","-pix_fmt","yuv420p","-crf","21","-preset","medium",
+                "-c:a","aac","-b:a","128k","-ar","44100","-ac","2",
+                "-t",str(n*SHOT_SEC),"-movflags","+faststart", out]
+    else:
+        with open(ffile,"w") as f: f.write(";\n".join(filt)+"\n")
+        cmd += ["-filter_complex_script", ffile,
+                "-map","[vout]",
+                "-r","30","-c:v","libx264","-pix_fmt","yuv420p","-crf","21","-preset","medium",
+                "-t",str(n*SHOT_SEC),"-movflags","+faststart", out]
+
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
-        print("FFMPEG ERROR:", r.stderr[-800:])
-        sys.exit(1)
+        print("FFMPEG ERROR:", r.stderr[-1500:]); sys.exit(1)
     sz = os.path.getsize(out)
-    print(f"✅ Video: {out}")
-    print(f"Ukuran: {sz//1024} KB ({sz} bytes), durasi: {n*SHOT_SEC}s, {n} shot")
-    print(f"Siap posting di IG reels. Tambah BGM/voiceover manual di CapCut kalau mau.")
-    return out
+    print(f"✅ {out}")
+    print(f"   {sz//1024} KB · 1080x1920 · 30fps · {n*SHOT_SEC}s · 5 shot · zoom-in · fade · {'BGM' if bgm else 'silent'}")
+    print(f"   Voiceover: manual (rekam/TTS di CapCut). TTS id-ID tidak tersedia di VPS.")
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--ep", type=int, default=1)
-    args = ap.parse_args()
-    shots, raw = load_ep(args.ep)
-    print(f"EP-{args.ep:03d}: {len(shots)} shot")
-    for s in shots: print(f"  Shot {s['idx']} — {s['judul']} (overlay: {s.get('overlay','')[:30]!r})")
-    render_mp4(args.ep, shots)
+    ap = argparse.ArgumentParser(); ap.add_argument("--ep", type=int, default=1); args = ap.parse_args()
+    render(args.ep)
